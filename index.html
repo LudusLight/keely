@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keely - Welcome to My World!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Fixed UI -->
+  <div class="scroll-progress" id="scroll-progress"></div>
+  <button class="sound-toggle" id="sound-toggle" aria-label="Toggle sound">🔇</button>
+  <div class="mouse-companion" id="mouse-companion" aria-hidden="true">🐭</div>
+  <div class="crumb-container" id="crumb-container" aria-hidden="true"></div>
+
+  <!-- Intro overlay -->
+  <div class="intro-overlay" id="intro-overlay" aria-hidden="true">
+    <div class="intro-cheese">🧀</div>
+    <div class="intro-mouse">🐭</div>
+  </div>
+
+  <!-- Floating particles -->
+  <div class="cheese-particles" id="cheese-particles" aria-hidden="true">
+    <span class="particle p1">🧀</span>
+    <span class="particle p2">🧀</span>
+    <span class="particle p3">🧀</span>
+    <span class="particle p4">🧀</span>
+    <span class="particle p5">🧀</span>
+    <span class="particle p6">🐭</span>
+    <span class="particle p7">🧀</span>
+  </div>
+
+  <header>
+    <nav>
+      <div class="logo">
+        <span class="logo-mouse" id="logo-mouse">🐭</span>
+        <span class="logo-text">Keely</span>
+        <span class="logo-cheese">🧀</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#favorites">Faves</a></li>
+        <li><a href="#fun">Fun Zone</a></li>
+        <li><a href="#contact" class="nav-cta">Say Hi!</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section id="home" class="hero">
+      <div class="cheese-bg" aria-hidden="true">
+        <div class="cheese-hole ch1"></div>
+        <div class="cheese-hole ch2"></div>
+        <div class="cheese-hole ch3"></div>
+        <div class="cheese-hole ch4"></div>
+        <div class="cheese-hole ch5"></div>
+        <div class="cheese-hole ch6"></div>
+        <div class="cheese-hole ch7"></div>
+        <div class="cheese-hole ch8"></div>
+      </div>
+      <div class="hero-content">
+        <div class="wave-hello"><span class="wave-hand">👋</span></div>
+        <h1><span class="time-greeting" id="time-greeting">Hi</span>, I'm <span class="name-highlight">Keely</span>!</h1>
+        <p class="hero-subtitle" id="hero-subtitle"></p>
+        <div class="hero-tags">
+          <span class="tag">🐭 Mouse Enthusiast</span>
+          <span class="tag">🧀 Cheese Connoisseur</span>
+          <span class="tag">✨ Dreamer</span>
+        </div>
+        <a href="#about" class="scroll-hint"><span>Scroll down</span><div class="scroll-arrow">↓</div></a>
+      </div>
+      <div class="hero-mouse-scene" aria-hidden="true">
+        <div class="mouse-character">
+          <div class="mouse-body">🐭</div>
+          <div class="mouse-trail"><span>·</span><span>·</span><span>·</span><span>·</span><span>·</span></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wave-divider wd-cream" aria-hidden="true"><svg viewBox="0 0 1200 40" preserveAspectRatio="none"><path d="M0,20 C150,40 350,0 500,20 C650,40 850,0 1000,20 C1100,40 1150,10 1200,20 L1200,40 L0,40Z"/></svg></div>
+
+    <!-- ABOUT -->
+    <section id="about" class="section about-section">
+      <div class="section-inner">
+        <div class="section-header">
+          <span class="section-emoji">🐭</span>
+          <h2 class="bounce-header">About Me</h2>
+          <svg class="squiggly-svg" viewBox="0 0 120 8"><path d="M0,4 Q15,0 30,4 Q45,8 60,4 Q75,0 90,4 Q105,8 120,4" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="about-grid">
+          <div class="about-card main-card tilt-card">
+            <div class="card-doodle top-right">✨</div>
+            <div class="card-doodle bottom-left">🧀</div>
+            <h3>The Short Version</h3>
+            <p>I'm Keely — a curious soul who believes life is better with a little bit of whimsy, a lot of cheese, and the determination of a tiny mouse on a big mission.</p>
+            <p class="secret-text">Psst... I also secretly love cats. Don't tell anyone. 🤫</p>
+            <p>When I'm not scurrying through my latest adventure, you can find me dreaming up creative projects, collecting fun facts about mice, and perfecting my cheese board game.</p>
+          </div>
+          <div class="about-sidebar">
+            <div class="about-card mini-card tilt-card"><span class="mini-icon">🌍</span><span class="mini-label">Location</span><span class="mini-value">The Cheese Wheel</span></div>
+            <div class="about-card mini-card tilt-card"><span class="mini-icon">💛</span><span class="mini-label">Mood</span><span class="mini-value">Gouda vibes only</span></div>
+            <div class="about-card mini-card tilt-card"><span class="mini-icon">🎵</span><span class="mini-label">Anthem</span><span class="mini-value">Three Blind Mice (remix)</span></div>
+            <div class="about-card mini-card tilt-card"><span class="mini-icon">⭐</span><span class="mini-label">Superpower</span><span class="mini-value">Finding snacks</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wave-divider wd-gold" aria-hidden="true"><svg viewBox="0 0 1200 40" preserveAspectRatio="none"><path d="M0,15 C200,40 400,0 600,25 C800,40 1000,5 1200,20 L1200,40 L0,40Z"/></svg></div>
+
+    <!-- MOUSE DIARY -->
+    <section class="section diary-section">
+      <div class="section-inner">
+        <div class="section-header">
+          <span class="section-emoji">📔</span>
+          <h2 class="bounce-header">The Mouse Diary</h2>
+          <svg class="squiggly-svg" viewBox="0 0 120 8"><path d="M0,4 Q15,0 30,4 Q45,8 60,4 Q75,0 90,4 Q105,8 120,4" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="diary-grid">
+          <div class="diary-card"><span class="diary-date">March 3rd</span><p>Found a triple-cream brie behind the fridge today. This is what peak happiness feels like. The humans don't suspect a thing.</p></div>
+          <div class="diary-card"><span class="diary-date">March 10th</span><p>Tried to explain to Gerald (the cat) that we could share the cheese. He did not agree. Negotiations ongoing.</p></div>
+          <div class="diary-card"><span class="diary-date">March 15th</span><p>Attempted a cheddar heist at the cheese shop. Got distracted by the aged gouda display. Mission: compromised but delicious.</p></div>
+          <div class="diary-card"><span class="diary-date">March 19th</span><p>Overheard the humans say "who moved my cheese." Played it cool. It was me. I moved the cheese.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wave-divider wd-cream" aria-hidden="true"><svg viewBox="0 0 1200 40" preserveAspectRatio="none"><path d="M0,25 C200,5 350,35 500,15 C700,40 900,0 1200,25 L1200,40 L0,40Z"/></svg></div>
+
+    <!-- FAVORITES -->
+    <section id="favorites" class="section favorites-section">
+      <div class="section-inner">
+        <div class="section-header">
+          <span class="section-emoji">🧀</span>
+          <h2 class="bounce-header">My Favorite Things</h2>
+          <svg class="squiggly-svg" viewBox="0 0 120 8"><path d="M0,4 Q15,0 30,4 Q45,8 60,4 Q75,0 90,4 Q105,8 120,4" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="favorites-grid">
+          <div class="fav-card tilt-card"><div class="fav-emoji-wrap"><span class="fav-emoji">🧀</span></div><h3>Cheeses</h3><ul class="fav-list"><li>Brie (the queen)</li><li>Sharp Cheddar</li><li>Mozzarella</li><li>Gouda (obviously)</li></ul></div>
+          <div class="fav-card tilt-card"><div class="fav-emoji-wrap"><span class="fav-emoji">📚</span></div><h3>Books</h3><ul class="fav-list"><li>Stuart Little</li><li>Redwall</li><li>The Tale of Despereaux</li><li>Who Moved My Cheese?</li></ul></div>
+          <div class="fav-card tilt-card"><div class="fav-emoji-wrap"><span class="fav-emoji">🎬</span></div><h3>Movies</h3><ul class="fav-list"><li>Ratatouille</li><li>Stuart Little</li><li>The Rescuers</li><li>An American Tail</li></ul></div>
+          <div class="fav-card tilt-card"><div class="fav-emoji-wrap"><span class="fav-emoji">🎯</span></div><h3>Hobbies</h3><ul class="fav-list"><li>Cheese tasting</li><li>Maze solving</li><li>Doodling mice</li><li>Collecting tiny things</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wave-divider wd-brown" aria-hidden="true"><svg viewBox="0 0 1200 40" preserveAspectRatio="none"><path d="M0,20 C150,40 350,0 500,20 C650,40 850,0 1000,20 C1100,40 1150,10 1200,20 L1200,40 L0,40Z"/></svg></div>
+
+    <!-- FUN ZONE -->
+    <section id="fun" class="section gallery-section">
+      <div class="cheese-starfield" id="cheese-starfield" aria-hidden="true"></div>
+      <div class="section-inner">
+        <div class="section-header">
+          <span class="section-emoji">✨</span>
+          <h2 class="bounce-header">The Fun Zone</h2>
+          <svg class="squiggly-svg" viewBox="0 0 120 8"><path d="M0,4 Q15,0 30,4 Q45,8 60,4 Q75,0 90,4 Q105,8 120,4" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </div>
+
+        <div class="fun-facts">
+          <div class="fact-card"><div class="fact-number">01</div><p>A mouse's heart beats <strong>632 times per minute</strong>. Mine does too when there's brie nearby.</p></div>
+          <div class="fact-card"><div class="fact-number">02</div><p>Mice can <strong>squeeze through a gap the size of a pencil</strong>. Explains my escape room skills.</p></div>
+          <div class="fact-card"><div class="fact-number">03</div><p>The world's most expensive cheese costs <strong>$600 per pound</strong>. Life goals, honestly.</p></div>
+          <div class="fact-card"><div class="fact-number">04</div><p>Mice actually <strong>prefer chocolate to cheese</strong>. I mean... same? But also cheese.</p></div>
+        </div>
+
+        <div class="cheese-rating">
+          <h3 class="handwritten">Today's Cheese Mood</h3>
+          <div class="mood-meter"><div class="mood-fill" id="mood-fill"><div class="mood-label" id="mood-label">Extra Cheesy 🧀🧀🧀</div></div></div>
+        </div>
+
+        <!-- Cheese Oracle -->
+        <div class="oracle-section">
+          <h3 class="handwritten">🔮 The Cheese Oracle</h3>
+          <p class="oracle-desc">Ask a yes-or-no question and the Oracle shall answer...</p>
+          <div class="oracle-input-wrap">
+            <input type="text" id="oracle-question" placeholder="Will I find good cheese today?">
+            <button id="oracle-ask" class="btn-game">Ask 🔮</button>
+          </div>
+          <div class="oracle-8ball-wrap" id="oracle-8ball">
+            <div class="ball-body">
+              <div class="ball-circle">
+                <span class="ball-8">8</span>
+              </div>
+              <div class="ball-window" id="oracle-window">
+                <span class="ball-triangle" id="oracle-triangle"></span>
+              </div>
+            </div>
+          </div>
+          <div class="oracle-answer" id="oracle-answer"></div>
+        </div>
+
+        <!-- Username Generator -->
+        <div class="oracle-section">
+          <h3 class="handwritten">🐭 Mouse Name Generator</h3>
+          <p class="oracle-desc">Generate your unique mouse-themed username!</p>
+          <div class="namegen-result" id="namegen-result">Click below to get your mouse name!</div>
+          <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;margin-top:1rem;">
+            <button id="namegen-btn" class="btn-game">Generate Name 🎲</button>
+            <button id="namegen-copy" class="btn-game">Copy 📋</button>
+          </div>
+          <div class="namegen-history" id="namegen-history"></div>
+        </div>
+
+        <!-- Game Arcade -->
+        <div class="arcade-section">
+          <h3 class="handwritten">🕹️ Game Arcade</h3>
+          <div class="arcade-tabs">
+            <button class="arcade-tab active" data-game="maze">🏁 Cheese Maze</button>
+            <button class="arcade-tab" data-game="snake">🐭 Mouse Run</button>
+            <button class="arcade-tab" data-game="whack">🔨 Whack-a-Cheese</button>
+            <button class="arcade-tab" data-game="clicker">👆 Cheese Clicker</button>
+            <button class="arcade-tab" data-game="mines">💣 Catsweeper</button>
+            <button class="arcade-tab" data-game="wordsearch">🔍 Word Search</button>
+            <button class="arcade-tab" data-game="dressup">👗 Dress Up</button>
+            <button class="arcade-tab" data-game="match3">💎 Cheese Match</button>
+            <button class="arcade-tab" data-game="peggle">🎯 Mouse Peggle</button>
+            <button class="arcade-tab" data-game="doodle">🐭 Mouse Jump</button>
+          </div>
+          <div class="arcade-content">
+            <div class="game-panel active" id="game-maze">
+              <p class="game-desc">Guide the mouse 🐭 to the cheese 🧀! Use arrow keys.</p>
+              <canvas id="maze-canvas" width="300" height="300"></canvas>
+              <button id="maze-new" class="btn-game">New Maze 🏁</button>
+            </div>
+            <div class="game-panel" id="game-snake">
+              <p class="game-desc">Be the mouse 🐭 — eat cheese 🧀 to grow! Don't hit yourself!</p>
+              <div class="snake-header"><span>Score: <strong id="snake-score">0</strong></span><span>Best: <strong id="snake-best">0</strong></span></div>
+              <canvas id="snake-canvas" width="300" height="300"></canvas>
+              <button id="snake-start" class="btn-game">Start Game! 🐭</button>
+            </div>
+            <div class="game-panel" id="game-whack">
+              <p class="game-desc">Click the cheese before it hides! 30 seconds. Go!</p>
+              <div class="whack-header"><span>Score: <strong id="whack-score">0</strong></span><span>Time: <strong id="whack-time">30</strong>s</span></div>
+              <div class="whack-grid" id="whack-grid"></div>
+              <button id="whack-start" class="btn-game">Start Game! 🔨</button>
+            </div>
+            <div class="game-panel" id="game-clicker">
+              <p class="game-desc">Click the cheese to collect it! Unlock achievements!</p>
+              <div class="clicker-cheese" id="clicker-cheese">🧀</div>
+              <div class="clicker-count">Cheese collected: <strong id="clicker-count">0</strong></div>
+              <div class="clicker-badges" id="clicker-badges"></div>
+            </div>
+            <div class="game-panel" id="game-wordsearch">
+              <p class="game-desc">Find all the cheese & mouse words hidden in the grid! 🔎</p>
+              <div class="ws-words" id="ws-words"></div>
+              <div class="ws-grid" id="ws-grid"></div>
+              <button id="ws-new" class="btn-game">New Puzzle 🔍</button>
+            </div>
+            <div class="game-panel" id="game-dressup">
+              <p class="game-desc">Dress up your mouse friend! Pick from hats, outfits, accessories & colors 🐭✨</p>
+              <canvas id="dressup-canvas" width="240" height="280"></canvas>
+              <div class="du-categories">
+                <div class="du-cat">
+                  <span class="du-label">Fur Color</span>
+                  <div class="du-items" id="du-colors"></div>
+                </div>
+                <div class="du-cat">
+                  <span class="du-label">Hats</span>
+                  <div class="du-items" id="du-hats"></div>
+                </div>
+                <div class="du-cat">
+                  <span class="du-label">Outfits</span>
+                  <div class="du-items" id="du-outfits"></div>
+                </div>
+                <div class="du-cat">
+                  <span class="du-label">Accessories</span>
+                  <div class="du-items" id="du-accs"></div>
+                </div>
+                <div class="du-cat">
+                  <span class="du-label">Backgrounds</span>
+                  <div class="du-items" id="du-bgs"></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+                <button id="du-random" class="btn-game">Randomize! 🎲</button>
+                <button id="du-reset" class="btn-game">Reset Look 🐭</button>
+              </div>
+            </div>
+            <div class="game-panel" id="game-mines">
+              <p class="game-desc">Uncover all safe tiles without hitting a cat 🐱! Right-click to flag. Find the cheese!</p>
+              <div class="mines-header">
+                <span>🐱 Cats: <strong id="mines-cats">10</strong></span>
+                <span>🚩 Flags: <strong id="mines-flags">0</strong></span>
+                <span id="mines-status">Click to start!</span>
+              </div>
+              <div class="mines-grid" id="mines-grid"></div>
+              <button id="mines-new" class="btn-game">New Game 🐱</button>
+            </div>
+            <div class="game-panel" id="game-match3">
+              <p class="game-desc">Swap adjacent cheeses & mice to match 3+ in a row! 🧀🐭</p>
+              <div class="match3-header"><span>Score: <strong id="match3-score">0</strong></span><span>Moves: <strong id="match3-moves">30</strong></span></div>
+              <canvas id="match3-canvas" width="320" height="320"></canvas>
+              <button id="match3-new" class="btn-game">New Game 💎</button>
+            </div>
+            <div class="game-panel" id="game-peggle">
+              <p class="game-desc">Clear all 🧡 orange pegs to win! Hit 💚 for powers, 💜 for bonus points 🎯</p>
+              <div class="peggle-header">
+                <span>Score: <strong id="peggle-score">0</strong></span>
+                <span>Balls: <strong id="peggle-balls">10</strong></span>
+                <span>🧡 <strong id="peggle-orange">0</strong></span>
+              </div>
+              <div class="peggle-fever-bar"><div class="peggle-fever-fill" id="peggle-fever"></div><span class="peggle-fever-label" id="peggle-fever-label">1x</span></div>
+              <canvas id="peggle-canvas" width="360" height="440"></canvas>
+              <button id="peggle-new" class="btn-game">New Game 🎯</button>
+            </div>
+            <div class="game-panel" id="game-doodle">
+              <p class="game-desc">Jump as high as you can! Avoid the cats! 🐭⬆️</p>
+              <div class="doodle-header"><span>Score: <strong id="doodle-score">0</strong></span><span>Best: <strong id="doodle-best">0</strong></span></div>
+              <canvas id="doodle-canvas" width="300" height="400"></canvas>
+              <button id="doodle-start" class="btn-game">Start Game! 🐭</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wave-divider wd-cream" aria-hidden="true"><svg viewBox="0 0 1200 40" preserveAspectRatio="none"><path d="M0,15 C200,40 400,0 600,25 C800,40 1000,5 1200,20 L1200,40 L0,40Z"/></svg></div>
+
+    <!-- ART GALLERY -->
+    <section class="section art-gallery-section">
+      <div class="section-inner">
+        <div class="section-header">
+          <span class="section-emoji">🖼️</span>
+          <h2 class="bounce-header">The Gallery of Gouda</h2>
+          <div class="squiggly-line"></div>
+        </div>
+        <p class="section-desc">A curated collection of the finest mice & cheese imagery. Click to admire! 🎨</p>
+        <div class="gallery-grid">
+          <div class="gallery-card gc-sunset">
+            <div class="gc-scene">🐭<br><span class="gc-sm">🌾🌾🌾</span></div>
+            <div class="gc-title">Golden Hour</div>
+            <div class="gc-desc">A field mouse watches the sunset over the wheat</div>
+          </div>
+          <div class="gallery-card gc-tall gc-night">
+            <div class="gc-scene"><span class="gc-lg">🧀</span><br>🐭<br><span class="gc-sm">🕯️✨🕯️</span></div>
+            <div class="gc-title">The Midnight Feast</div>
+            <div class="gc-desc">When the humans sleep, the cheese comes out</div>
+          </div>
+          <div class="gallery-card gc-garden">
+            <div class="gc-scene">🌸🐭🌷<br><span class="gc-sm">🌿🌱🌿</span></div>
+            <div class="gc-title">Garden Stroll</div>
+            <div class="gc-desc">Spring means flowers and fresh mozzarella</div>
+          </div>
+          <div class="gallery-card gc-cheese">
+            <div class="gc-scene"><span class="gc-lg">🧀🧀🧀</span><br><span class="gc-sm">🫕 🍷</span></div>
+            <div class="gc-title">The Spread</div>
+            <div class="gc-desc">A platter fit for the fanciest mouse</div>
+          </div>
+          <div class="gallery-card gc-tall gc-forest">
+            <div class="gc-scene">🌲🐭🌲<br>🍂🍁🍂<br><span class="gc-sm">🍄🌰🍄</span></div>
+            <div class="gc-title">Forest Explorer</div>
+            <div class="gc-desc">Adventure awaits beyond the mouse hole</div>
+          </div>
+          <div class="gallery-card gc-cozy">
+            <div class="gc-scene">🐭💤<br><span class="gc-sm">📚🕯️🧀</span></div>
+            <div class="gc-title">Cozy Night In</div>
+            <div class="gc-desc">Books, candles, and a slice of brie</div>
+          </div>
+          <div class="gallery-card gc-party">
+            <div class="gc-scene">🎉🐭🎊<br><span class="gc-sm">🧀🎈🧀</span></div>
+            <div class="gc-title">Cheese Party!</div>
+            <div class="gc-desc">Every day is a celebration when there's gouda</div>
+          </div>
+          <div class="gallery-card gc-mountain">
+            <div class="gc-scene">⛰️🐭🏔️<br><span class="gc-sm">🧀🚩🧀</span></div>
+            <div class="gc-title">The Summit</div>
+            <div class="gc-desc">She climbed the mountain for the alpine cheese</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wave-divider wd-dark" aria-hidden="true"><svg viewBox="0 0 1200 40" preserveAspectRatio="none"><path d="M0,20 C150,5 350,35 500,15 C650,0 850,30 1200,10 L1200,40 L0,40Z"/></svg></div>
+
+    <!-- QUIZ -->
+    <section class="section quiz-section">
+      <div class="section-inner">
+        <div class="section-header">
+          <span class="section-emoji">🧪</span>
+          <h2 class="bounce-header">What Cheese Are You?</h2>
+          <svg class="squiggly-svg" viewBox="0 0 120 8"><path d="M0,4 Q15,0 30,4 Q45,8 60,4 Q75,0 90,4 Q105,8 120,4" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="quiz-container" id="quiz-container"></div>
+      </div>
+    </section>
+
+    <div class="wave-divider wd-gold" aria-hidden="true"><svg viewBox="0 0 1200 40" preserveAspectRatio="none"><path d="M0,20 C150,40 350,0 500,20 C650,40 850,0 1000,20 C1100,40 1150,10 1200,20 L1200,40 L0,40Z"/></svg></div>
+
+    <!-- SQUEAKBOARD -->
+    <section class="section squeakboard-section">
+      <div class="section-inner">
+        <div class="section-header">
+          <span class="section-emoji">📌</span>
+          <h2 class="bounce-header">The Squeakboard</h2>
+          <svg class="squiggly-svg" viewBox="0 0 120 8"><path d="M0,4 Q15,0 30,4 Q45,8 60,4 Q75,0 90,4 Q105,8 120,4" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </div>
+        <p class="section-desc">Leave a squeak! Your message will stick around. 📝</p>
+        <div class="squeak-form">
+          <input type="text" id="squeak-name" placeholder="Your name" maxlength="20">
+          <input type="text" id="squeak-msg" placeholder="Leave a squeak! (140 chars max)" maxlength="140">
+          <button id="squeak-post" class="btn-game">Pin it! 📌</button>
+        </div>
+        <div class="corkboard" id="corkboard"></div>
+      </div>
+    </section>
+
+    <div class="wave-divider wd-cream" aria-hidden="true"><svg viewBox="0 0 1200 40" preserveAspectRatio="none"><path d="M0,25 C200,5 350,35 500,15 C700,40 900,0 1200,25 L1200,40 L0,40Z"/></svg></div>
+
+    <!-- CONTACT -->
+    <section id="contact" class="section contact-section">
+      <div class="section-inner">
+        <div class="section-header">
+          <span class="section-emoji">💌</span>
+          <h2 class="bounce-header">Send Me a Squeak!</h2>
+          <svg class="squiggly-svg" viewBox="0 0 120 8"><path d="M0,4 Q15,0 30,4 Q45,8 60,4 Q75,0 90,4 Q105,8 120,4" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </div>
+        <p class="section-desc">Want to chat? Leave a message and I'll scurry back faster than a mouse to a cheese platter!</p>
+        <form id="contact-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Your Name 🐭</label>
+              <input type="text" name="name" placeholder="e.g. Chester the Mouse" required>
+              <span class="mouse-peek" aria-hidden="true">🐭</span>
+            </div>
+            <div class="form-group">
+              <label>Your Email 📧</label>
+              <input type="email" name="email" placeholder="mouse@cheeseville.com" required>
+              <span class="mouse-peek" aria-hidden="true">🐭</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Your Message 💬</label>
+            <textarea name="message" placeholder="Tell me something fun! What's your favorite cheese?" rows="5" required></textarea>
+            <span class="mouse-peek" aria-hidden="true">🐭</span>
+          </div>
+          <button type="submit" class="btn-submit"><span>Send Squeak!</span><span class="btn-mouse">🐭</span></button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- Farewell -->
+  <div class="farewell-scene" id="farewell-scene" aria-hidden="true">
+    <div class="farewell-mouse" id="farewell-mouse">🐭</div>
+    <div class="farewell-bubble" id="farewell-bubble">Thanks for visiting! Come back for more cheese! 🧀</div>
+  </div>
+
+  <footer>
+    <div class="footer-cheese-border" aria-hidden="true"></div>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="footer-logo">🐭 Keely 🧀</span>
+        <p>Made with love, cheese, and a tiny mouse-sized keyboard.</p>
+      </div>
+      <div class="footer-fun">
+        <p class="handwritten">"In a world full of cats, be a mouse with a plan." 🐭✨</p>
+      </div>
+    </div>
+    <div class="mouse-hole" id="mouse-hole" title="Back to top!">
+      <div class="mouse-hole-eyes"><span class="eye"></span><span class="eye"></span></div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copyright" id="footer-copyright">&copy; 2026 Keely's Cheese Corner. All rights reserved. No mice were harmed. 🧀</p>
+      <p class="footer-hidden" id="footer-hidden">Fun fact: This site has 42 cheese references and zero regrets. 🧀✨</p>
+      <p class="visit-message" id="visit-message"></p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
