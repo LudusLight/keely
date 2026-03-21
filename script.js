@@ -45,7 +45,6 @@
     initDoodleJump();
     initGallery();
     initQuiz();
-    initSqueakboard();
     initContactForm();
     initFarewellScene();
     initMouseHole();
@@ -2299,56 +2298,6 @@
     renderQuestion();
   }
 
-  // ========== SQUEAKBOARD ==========
-  function initSqueakboard() {
-    const nameInput = $("#squeak-name");
-    const msgInput = $("#squeak-msg");
-    const postBtn = $("#squeak-post");
-    const board = $("#corkboard");
-    if (!postBtn || !board) return;
-
-    const colors = ["#fff8dc", "#ffe4e1", "#e6e6fa", "#e0f0e0", "#fff0db"];
-
-    function loadNotes() {
-      return JSON.parse(localStorage.getItem("keely-squeaks") || "[]");
-    }
-
-    function saveNotes(notes) {
-      localStorage.setItem("keely-squeaks", JSON.stringify(notes));
-    }
-
-    function renderNotes() {
-      const notes = loadNotes();
-      board.innerHTML = "";
-      if (notes.length === 0) {
-        board.innerHTML = '<p style="color:rgba(255,255,255,0.5);font-style:italic;width:100%;text-align:center;">No squeaks yet! Be the first. 🐭</p>';
-        return;
-      }
-      notes.slice(-20).forEach((note, i) => {
-        const el = document.createElement("div");
-        el.className = "sticky-note";
-        const rotation = (Math.random() * 6 - 3).toFixed(1);
-        el.style.transform = `rotate(${rotation}deg)`;
-        el.style.background = colors[i % colors.length];
-        el.innerHTML = `<div class="note-name">${escapeHtml(note.name)}</div><div class="note-msg">${escapeHtml(note.msg)}</div>`;
-        board.appendChild(el);
-      });
-    }
-
-    postBtn.addEventListener("click", () => {
-      const name = nameInput.value.trim();
-      const msg = msgInput.value.trim();
-      if (!name || !msg) return;
-      const notes = loadNotes();
-      notes.push({ name, msg, date: Date.now() });
-      saveNotes(notes);
-      nameInput.value = ""; msgInput.value = "";
-      renderNotes();
-      playCelebration();
-    });
-
-    renderNotes();
-  }
 
   function escapeHtml(str) {
     const div = document.createElement("div");
