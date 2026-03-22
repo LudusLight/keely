@@ -253,33 +253,19 @@
               <button id="ws-new" class="btn-game">New Puzzle 🔍</button>
             </div>
             <div class="game-panel" id="game-dressup">
-              <p class="game-desc">Dress up your mouse friend! Pick from hats, outfits, accessories & colors 🐭✨</p>
-              <canvas id="dressup-canvas" width="240" height="280"></canvas>
-              <div class="du-categories">
-                <div class="du-cat">
-                  <span class="du-label">Fur Color</span>
-                  <div class="du-items" id="du-colors"></div>
+              <div class="picrew-maker">
+                <div class="picrew-preview">
+                  <canvas id="dressup-canvas" width="320" height="380"></canvas>
                 </div>
-                <div class="du-cat">
-                  <span class="du-label">Hats</span>
-                  <div class="du-items" id="du-hats"></div>
+                <div class="picrew-controls">
+                  <div class="picrew-tabs" id="du-tabs"></div>
+                  <div class="picrew-items-panel" id="du-items-panel"></div>
+                  <div class="picrew-actions">
+                    <button id="du-random" class="btn-picrew"><span>🎲</span> Randomize</button>
+                    <button id="du-reset" class="btn-picrew"><span>🐭</span> Reset</button>
+                    <button id="du-download" class="btn-picrew btn-picrew-save"><span>💾</span> Save</button>
+                  </div>
                 </div>
-                <div class="du-cat">
-                  <span class="du-label">Outfits</span>
-                  <div class="du-items" id="du-outfits"></div>
-                </div>
-                <div class="du-cat">
-                  <span class="du-label">Accessories</span>
-                  <div class="du-items" id="du-accs"></div>
-                </div>
-                <div class="du-cat">
-                  <span class="du-label">Backgrounds</span>
-                  <div class="du-items" id="du-bgs"></div>
-                </div>
-              </div>
-              <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
-                <button id="du-random" class="btn-game">Randomize! 🎲</button>
-                <button id="du-reset" class="btn-game">Reset Look 🐭</button>
               </div>
             </div>
             <div class="game-panel" id="game-mines">

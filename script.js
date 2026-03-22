@@ -1163,14 +1163,12 @@
   // ========== DRESS UP ==========
   function initDressUp() {
     const canvas = $("#dressup-canvas");
-    const hatsContainer = $("#du-hats");
-    const accsContainer = $("#du-accs");
-    const outfitsContainer = $("#du-outfits");
-    const colorsContainer = $("#du-colors");
-    const bgsContainer = $("#du-bgs");
+    const tabsContainer = $("#du-tabs");
+    const itemsPanel = $("#du-items-panel");
     const resetBtn = $("#du-reset");
     const randomBtn = $("#du-random");
-    if (!canvas || !hatsContainer) return;
+    const downloadBtn = $("#du-download");
+    if (!canvas || !tabsContainer) return;
     const ctx = canvas.getContext("2d");
     const CW = canvas.width, CH = canvas.height;
 
@@ -2056,46 +2054,70 @@
       });
     }
 
-    function renderButtons(container, items, key) {
-      container.innerHTML = "";
-      items.forEach((item, i) => {
-        const btn = document.createElement("div");
-        btn.className = "du-item" + (sel[key] === i ? " active" : "");
-        btn.textContent = item.name;
-        btn.style.fontSize = "0.55rem";
-        btn.style.width = "46px";
-        btn.style.height = "32px";
-        btn.style.lineHeight = "1.1";
-        btn.style.padding = "2px";
-        if (key === "fur" && i < furColors.length) {
-          btn.style.borderBottom = "3px solid " + furColors[i].body;
-        }
-        if (key === "bg") {
-          const bgCols = ["#87CEEB", "#1a1a3e", "#ff6b35", "#90EE90", "#ffd700", "#8B7355", "#2196f3", "#0a0020"];
-          if (i < bgCols.length) btn.style.borderBottom = "3px solid " + bgCols[i];
-        }
-        btn.addEventListener("click", () => {
-          sel[key] = sel[key] === i && key !== "fur" && key !== "bg" ? 0 : i;
-          playSqueak();
-          renderAll();
-          drawMouse();
+    // Picrew-style categories with icons
+    const categories = [
+      { key: "fur", label: "Fur", icon: "🎨", items: furColors },
+      { key: "hat", label: "Hats", icon: "🎩", items: hats },
+      { key: "outfit", label: "Outfits", icon: "👗", items: outfits },
+      { key: "acc", label: "Items", icon: "✨", items: accessories },
+      { key: "bg", label: "Scene", icon: "🌄", items: backgrounds }
+    ];
+    let activeTab = 0;
+
+    const catIcons = {
+      fur: ["🐭","🐭","🐭","🐭","🐭","🐭","🐭","🐭"],
+      hat: ["❌","🎩","👑","🎀","🫐","🧙","🌸","🏴‍☠️","👨‍🍳","👸","🤠","🧶","😇","⚔️","🎉"],
+      outfit: ["❌","🧣","🦸","👗","🎀","🛡️","🧶","🩰","👖","🤵","🧥","👸","⚽","👩‍🍳","🎎"],
+      acc: ["❌","👓","🧀","⚔️","🪄","🎸","😊","🧐","🛡️","🌹","🪽","🎈","🥸","📖","✨"],
+      bg: ["☀️","🌙","🌅","🌿","🧀","🏰","🏖️","🚀"]
+    };
+
+    function renderTabs() {
+      tabsContainer.innerHTML = "";
+      categories.forEach((cat, i) => {
+        const tab = document.createElement("div");
+        tab.className = "picrew-tab" + (activeTab === i ? " active" : "");
+        tab.innerHTML = `<span class="picrew-tab-icon">${cat.icon}</span><span class="picrew-tab-label">${cat.label}</span>`;
+        tab.addEventListener("click", () => {
+          activeTab = i;
+          renderTabs();
+          renderItems();
         });
-        container.appendChild(btn);
+        tabsContainer.appendChild(tab);
       });
     }
 
-    function renderAll() {
-      renderButtons(colorsContainer, furColors, "fur");
-      renderButtons(hatsContainer, hats, "hat");
-      renderButtons(outfitsContainer, outfits, "outfit");
-      renderButtons(accsContainer, accessories, "acc");
-      renderButtons(bgsContainer, backgrounds, "bg");
+    function renderItems() {
+      itemsPanel.innerHTML = "";
+      const cat = categories[activeTab];
+      const icons = catIcons[cat.key];
+      cat.items.forEach((item, i) => {
+        const el = document.createElement("div");
+        el.className = "picrew-item" + (sel[cat.key] === i ? " active" : "");
+
+        if (cat.key === "fur") {
+          el.innerHTML = `<div class="picrew-item-swatch" style="background:${item.body}"></div><span class="picrew-item-label">${item.name}</span>`;
+        } else if (cat.key === "bg") {
+          const bgCols = ["#87CEEB","#1a1a3e","#ff6b35","#90EE90","#ffd700","#8B7355","#2196f3","#0a0020"];
+          el.innerHTML = `<div class="picrew-item-swatch" style="background:${bgCols[i]}"></div><span class="picrew-item-label">${item.name}</span>`;
+        } else {
+          el.innerHTML = `<span class="picrew-item-icon">${icons[i] || "?"}</span><span class="picrew-item-label">${item.name}</span>`;
+        }
+
+        el.addEventListener("click", () => {
+          sel[cat.key] = sel[cat.key] === i && cat.key !== "fur" && cat.key !== "bg" ? 0 : i;
+          playSqueak();
+          renderItems();
+          drawMouse();
+        });
+        itemsPanel.appendChild(el);
+      });
     }
 
     resetBtn.addEventListener("click", () => {
       sel = { fur: 0, hat: 0, outfit: 0, acc: 0, bg: 0 };
       playSqueak();
-      renderAll();
+      renderItems();
       drawMouse();
     });
 
@@ -2109,12 +2131,23 @@
           bg: Math.floor(Math.random() * backgrounds.length)
         };
         playCelebration();
-        renderAll();
+        renderItems();
         drawMouse();
       });
     }
 
-    renderAll();
+    if (downloadBtn) {
+      downloadBtn.addEventListener("click", () => {
+        const link = document.createElement("a");
+        link.download = "my-mouse.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        playCelebration();
+      });
+    }
+
+    renderTabs();
+    renderItems();
     drawMouse();
   }
 
