@@ -1196,6 +1196,16 @@
       { name: "Folded" },
       { name: "Curly" }
     ];
+    const tailStyles = [
+      { name: "Classic" },
+      { name: "Curly" },
+      { name: "Fluffy" },
+      { name: "Lightning" },
+      { name: "Heart" },
+      { name: "Stubby" },
+      { name: "Long" },
+      { name: "Ribbon" }
+    ];
     const eyeStyles = [
       { name: "Classic" },
       { name: "Sparkle" },
@@ -1314,7 +1324,7 @@
       { name: "Cherry", drawBg: drawBgCherry }
     ];
 
-    let sel = { fur: 0, ears: 0, eyes: 0, mouth: 0, cheeks: 0, hat: 0, outfit: 0, acc: 0, bg: 0 };
+    let sel = { fur: 0, ears: 0, tail: 0, eyes: 0, mouth: 0, cheeks: 0, hat: 0, outfit: 0, acc: 0, bg: 0 };
 
     // Mouse body at center
     const MX = CW / 2, MY = CH / 2 + 15;
@@ -1767,37 +1777,104 @@
       }
     }
 
+    // ----- Tail drawing functions -----
+    function drawTail(fur) {
+      const t = sel.tail;
+      const tc = fur.inner;
+      const tx = MX+2, ty = MY+42;
+      ctx.lineCap = "round";
+      if (t === 0) { // Classic — thin curvy
+        ctx.strokeStyle = tc; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(tx, ty);
+        ctx.bezierCurveTo(MX+35, MY+58, MX+48, MY+28, MX+58, MY+48); ctx.stroke();
+        ol(() => { ctx.beginPath(); ctx.moveTo(tx, ty);
+          ctx.bezierCurveTo(MX+35, MY+58, MX+48, MY+28, MX+58, MY+48); }, PK_OL, 1.5);
+      } else if (t === 1) { // Curly — spiral
+        ctx.strokeStyle = tc; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(tx, ty);
+        ctx.bezierCurveTo(MX+30, MY+55, MX+45, MY+35, MX+38, MY+50);
+        ctx.bezierCurveTo(MX+32, MY+60, MX+50, MY+55, MX+42, MY+42); ctx.stroke();
+        ol(() => { ctx.beginPath(); ctx.moveTo(tx, ty);
+          ctx.bezierCurveTo(MX+30, MY+55, MX+45, MY+35, MX+38, MY+50);
+          ctx.bezierCurveTo(MX+32, MY+60, MX+50, MY+55, MX+42, MY+42); }, PK_OL, 1.5);
+      } else if (t === 2) { // Fluffy — big puffy
+        ctx.fillStyle = fur.body;
+        ctx.beginPath(); ctx.arc(MX+42, MY+42, 14, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(MX+36, MY+48, 10, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(MX+48, MY+48, 10, 0, Math.PI*2); ctx.fill();
+        ol(() => { ctx.beginPath(); ctx.arc(MX+42, MY+42, 14, 0, Math.PI*2); ctx.arc(MX+36, MY+48, 10, 0, Math.PI*2); ctx.arc(MX+48, MY+48, 10, 0, Math.PI*2); }, PK_OL, 2);
+        ctx.strokeStyle = tc; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(MX+30, MY+42); ctx.stroke();
+      } else if (t === 3) { // Lightning — zigzag like Pikachu
+        ctx.fillStyle = "#ffc830";
+        ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(MX+25, MY+35); ctx.lineTo(MX+20, MY+48);
+        ctx.lineTo(MX+45, MY+32); ctx.lineTo(MX+40, MY+50); ctx.lineTo(MX+58, MY+38);
+        ctx.lineTo(MX+55, MY+52); ctx.lineTo(MX+35, MY+55); ctx.lineTo(MX+18, MY+50); ctx.closePath(); ctx.fill();
+        ol(() => { ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(MX+25, MY+35); ctx.lineTo(MX+20, MY+48);
+          ctx.lineTo(MX+45, MY+32); ctx.lineTo(MX+40, MY+50); ctx.lineTo(MX+58, MY+38);
+          ctx.lineTo(MX+55, MY+52); ctx.lineTo(MX+35, MY+55); ctx.lineTo(MX+18, MY+50); ctx.closePath(); }, PK_OL, 2);
+      } else if (t === 4) { // Heart tip
+        ctx.strokeStyle = tc; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(tx, ty);
+        ctx.bezierCurveTo(MX+30, MY+55, MX+42, MY+35, MX+50, MY+42); ctx.stroke();
+        ol(() => { ctx.beginPath(); ctx.moveTo(tx, ty);
+          ctx.bezierCurveTo(MX+30, MY+55, MX+42, MY+35, MX+50, MY+42); }, PK_OL, 1.5);
+        ctx.fillStyle = "#e83060";
+        const hx = MX+52, hy = MY+40;
+        ctx.beginPath(); ctx.arc(hx-3, hy-2, 4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(hx+3, hy-2, 4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(hx-6, hy); ctx.lineTo(hx, hy+6); ctx.lineTo(hx+6, hy); ctx.fill();
+      } else if (t === 5) { // Stubby — short nub
+        ctx.fillStyle = tc;
+        ctx.beginPath(); ctx.ellipse(MX+18, MY+48, 8, 5, 0.3, 0, Math.PI*2); ctx.fill();
+        ol(() => { ctx.beginPath(); ctx.ellipse(MX+18, MY+48, 8, 5, 0.3, 0, Math.PI*2); }, PK_OL, 2);
+      } else if (t === 6) { // Long — extra long whip
+        ctx.strokeStyle = tc; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(tx, ty);
+        ctx.bezierCurveTo(MX+40, MY+65, MX+60, MY+20, MX+75, MY+55);
+        ctx.bezierCurveTo(MX+80, MY+62, MX+85, MY+50, MX+82, MY+58); ctx.stroke();
+        ol(() => { ctx.beginPath(); ctx.moveTo(tx, ty);
+          ctx.bezierCurveTo(MX+40, MY+65, MX+60, MY+20, MX+75, MY+55);
+          ctx.bezierCurveTo(MX+80, MY+62, MX+85, MY+50, MX+82, MY+58); }, PK_OL, 1);
+      } else if (t === 7) { // Ribbon — bow on tail
+        ctx.strokeStyle = tc; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(tx, ty);
+        ctx.bezierCurveTo(MX+30, MY+55, MX+40, MY+35, MX+50, MY+45); ctx.stroke();
+        ol(() => { ctx.beginPath(); ctx.moveTo(tx, ty);
+          ctx.bezierCurveTo(MX+30, MY+55, MX+40, MY+35, MX+50, MY+45); }, PK_OL, 1.5);
+        ctx.fillStyle = "#ff5588";
+        ctx.beginPath(); ctx.ellipse(MX+50, MY+42, 6, 4, -0.3, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(MX+50, MY+48, 6, 4, 0.3, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#ff3366";
+        ctx.beginPath(); ctx.arc(MX+50, MY+45, 3, 0, Math.PI*2); ctx.fill();
+      }
+    }
+
     function drawMouse() {
       const fur = furColors[sel.fur];
       const bg = backgrounds[sel.bg];
-      const bodyShade = shade(fur.body, 30);
-      const bellyShade = shade(fur.belly, 20);
-      const innerShade = shade(fur.inner, 20);
+      const bodyShade = shade(fur.body, 25);
 
       // Background
       if (bg.drawBg) bg.drawBg(ctx);
       else { ctx.fillStyle = "#87CEEB"; ctx.fillRect(0, 0, CW, CH); }
 
-      // Tail — solid color, thick black outline
-      ctx.strokeStyle = fur.inner; ctx.lineWidth = 5; ctx.lineCap = "round";
-      ctx.beginPath(); ctx.moveTo(MX+2, MY+42);
-      ctx.bezierCurveTo(MX+35, MY+58, MX+48, MY+28, MX+58, MY+48); ctx.stroke();
-      ol(() => { ctx.beginPath(); ctx.moveTo(MX+2, MY+42);
-        ctx.bezierCurveTo(MX+35, MY+58, MX+48, MY+28, MX+58, MY+48); }, PK_OL, 1.5);
+      // Tail (selected style)
+      drawTail(fur);
 
       // Back outfit
       if (sel.outfit > 0 && outfits[sel.outfit].name === "Cape") {
         outfits[sel.outfit].draw(ctx, MX, MY, fur, true);
       }
 
-      // Body — FLAT color + hard-edge shadow on bottom-right
+      // Body — flat color + subtle bottom shadow strip
       ctx.fillStyle = fur.body;
       ctx.beginPath(); ctx.ellipse(MX, MY+25, 30, 35, 0, 0, Math.PI*2); ctx.fill();
-      // Hard shadow — clip to body shape, fill bottom half darker
+      // Shadow — just the bottom edge, clipped
       ctx.save();
       ctx.beginPath(); ctx.ellipse(MX, MY+25, 30, 35, 0, 0, Math.PI*2); ctx.clip();
       ctx.fillStyle = bodyShade;
-      ctx.beginPath(); ctx.ellipse(MX+8, MY+38, 28, 28, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillRect(MX-32, MY+40, 64, 25);
       ctx.restore();
       ol(() => { ctx.beginPath(); ctx.ellipse(MX, MY+25, 30, 35, 0, 0, Math.PI*2); }, PK_OL, 2.5);
 
@@ -1826,21 +1903,21 @@
           ctx.quadraticCurveTo(MX+s*23, MY+16, MX+s*28, MY+10);
         }, PK_OL, 2);
       });
-      // Paws — flat
+      // Paws
       ctx.fillStyle = fur.inner;
       ctx.beginPath(); ctx.arc(MX-26, MY+36, 5, 0, Math.PI*2); ctx.fill();
       ol(() => { ctx.beginPath(); ctx.arc(MX-26, MY+36, 5, 0, Math.PI*2); }, PK_OL, 1.5);
       ctx.beginPath(); ctx.arc(MX+26, MY+36, 5, 0, Math.PI*2); ctx.fill();
       ol(() => { ctx.beginPath(); ctx.arc(MX+26, MY+36, 5, 0, Math.PI*2); }, PK_OL, 1.5);
 
-      // Head — flat color + hard shadow, thick outline, BIG and round
+      // Head — flat color + subtle bottom shadow strip
       ctx.fillStyle = fur.body;
       ctx.beginPath(); ctx.arc(MX, MY-16, 34, 0, Math.PI*2); ctx.fill();
-      // Hard shadow on head — bottom-right
+      // Shadow — just the bottom edge
       ctx.save();
       ctx.beginPath(); ctx.arc(MX, MY-16, 34, 0, Math.PI*2); ctx.clip();
       ctx.fillStyle = bodyShade;
-      ctx.beginPath(); ctx.ellipse(MX+10, MY, 30, 24, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillRect(MX-36, MY+2, 72, 20);
       ctx.restore();
       ol(() => { ctx.beginPath(); ctx.arc(MX, MY-16, 34, 0, Math.PI*2); }, PK_OL, 2.5);
 
@@ -2652,6 +2729,7 @@
     const categories = [
       { key: "fur", label: "Fur", icon: "🎨", items: furColors },
       { key: "ears", label: "Ears", icon: "👂", items: earStyles },
+      { key: "tail", label: "Tail", icon: "🐾", items: tailStyles },
       { key: "eyes", label: "Eyes", icon: "👀", items: eyeStyles },
       { key: "mouth", label: "Mouth", icon: "👄", items: mouthStyles },
       { key: "cheeks", label: "Cheeks", icon: "💗", items: cheekStyles },
@@ -2665,6 +2743,7 @@
     const catIcons = {
       fur: ["🐭","🐭","🐭","🐭","🐭","🐭","🐭","🐭","🐭","🐭","🐭","🐭"],
       ears: ["🔵","🔺","🐕","🤏","🐘","🌿","📁","🌀"],
+      tail: ["🐭","🌀","🦊","⚡","💖","🔘","📏","🎀"],
       eyes: ["👁️","✨","😴","🐱","💖","⭐","😉","😌","⚫","💫","😠","😢"],
       mouth: ["😊","😮","😸","😏","😛","⭕","😁","😤","🧛","😋"],
       cheeks: ["❌","😊","🔴","💕","⭐","🌸","🌀","⚪","✨"],
@@ -2707,7 +2786,7 @@
         }
 
         el.addEventListener("click", () => {
-          const noToggle = ["fur","bg","ears","eyes","mouth"];
+          const noToggle = ["fur","bg","ears","tail","eyes","mouth"];
           sel[cat.key] = sel[cat.key] === i && !noToggle.includes(cat.key) ? 0 : i;
           playSqueak();
           renderItems();
@@ -2718,7 +2797,7 @@
     }
 
     resetBtn.addEventListener("click", () => {
-      sel = { fur: 0, ears: 0, eyes: 0, mouth: 0, cheeks: 0, hat: 0, outfit: 0, acc: 0, bg: 0 };
+      sel = { fur: 0, ears: 0, tail: 0, eyes: 0, mouth: 0, cheeks: 0, hat: 0, outfit: 0, acc: 0, bg: 0 };
       playSqueak();
       renderItems();
       drawMouse();
@@ -2729,6 +2808,7 @@
         sel = {
           fur: Math.floor(Math.random() * furColors.length),
           ears: Math.floor(Math.random() * earStyles.length),
+          tail: Math.floor(Math.random() * tailStyles.length),
           eyes: Math.floor(Math.random() * eyeStyles.length),
           mouth: Math.floor(Math.random() * mouthStyles.length),
           cheeks: Math.floor(Math.random() * cheekStyles.length),
