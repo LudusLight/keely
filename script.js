@@ -650,15 +650,37 @@
         }
       }
 
-      // Cheese (bottom-right)
-      ctx.globalAlpha = 1;
-      ctx.font = (CELL - 4) + "px serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("🧀", (SIZE - 1) * CELL + CELL / 2, (SIZE - 1) * CELL + CELL / 2);
+      // Cheese (bottom-right) — draw as solid yellow wedge
+      const chX = (SIZE - 1) * CELL, chY = (SIZE - 1) * CELL;
+      ctx.fillStyle = "#ffc83d";
+      ctx.beginPath();
+      ctx.moveTo(chX + 2, chY + CELL - 2);
+      ctx.lineTo(chX + CELL / 2, chY + 2);
+      ctx.lineTo(chX + CELL - 2, chY + CELL - 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#e8a317";
+      ctx.beginPath(); ctx.arc(chX + CELL / 2 - 2, chY + CELL / 2 + 2, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(chX + CELL / 2 + 3, chY + CELL - 5, 1.5, 0, Math.PI * 2); ctx.fill();
 
-      // Player
-      ctx.fillText("🐭", playerX * CELL + CELL / 2, playerY * CELL + CELL / 2);
+      // Player — draw as solid grey mouse
+      const mX = playerX * CELL + CELL / 2, mY = playerY * CELL + CELL / 2;
+      // Body
+      ctx.fillStyle = "#808080";
+      ctx.beginPath(); ctx.ellipse(mX, mY + 1, 7, 6, 0, 0, Math.PI * 2); ctx.fill();
+      // Ears
+      ctx.beginPath(); ctx.arc(mX - 4, mY - 5, 3.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(mX + 4, mY - 5, 3.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#f0b0b0";
+      ctx.beginPath(); ctx.arc(mX - 4, mY - 5, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(mX + 4, mY - 5, 2, 0, Math.PI * 2); ctx.fill();
+      // Eyes
+      ctx.fillStyle = "#111";
+      ctx.beginPath(); ctx.arc(mX - 2.5, mY - 1, 1.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(mX + 2.5, mY - 1, 1.2, 0, Math.PI * 2); ctx.fill();
+      // Nose
+      ctx.fillStyle = "#ff8faa";
+      ctx.beginPath(); ctx.arc(mX, mY + 2, 1.5, 0, Math.PI * 2); ctx.fill();
 
       // Move counter
       ctx.fillStyle = "rgba(61,44,30,0.5)";
