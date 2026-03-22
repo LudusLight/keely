@@ -1545,8 +1545,8 @@
     // ----- Eye drawing functions (Ghibli style — warm, round, simple) -----
     function drawEyes() {
       const e = sel.eyes;
-      const EX = [-11, 11], EY = MY - 20;
-      const R = 7;
+      const EX = [-12, 12], EY = MY - 18;
+      const R = 7.5;
       function ghibliEye(x, irisColor) {
         ctx.fillStyle = "#fff";
         ctx.beginPath(); ctx.arc(MX+x, EY, R, 0, Math.PI*2); ctx.fill();
@@ -1778,92 +1778,96 @@
       }
     }
 
+    // Smooth gradient fill for Ghibli-style shading
+    function gradBody(cx, cy, rx, ry, baseColor, shadeColor) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(1, ry / rx);
+      const grd = ctx.createRadialGradient(-rx * 0.25, -rx * 0.3, rx * 0.1, 0, 0, rx);
+      grd.addColorStop(0, baseColor);
+      grd.addColorStop(0.7, baseColor);
+      grd.addColorStop(1, shadeColor);
+      ctx.fillStyle = grd;
+      ctx.beginPath(); ctx.arc(0, 0, rx, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
     function drawMouse() {
       const fur = furColors[sel.fur];
       const bg = backgrounds[sel.bg];
+      const bodyShade = shade(fur.body, 22);
+      const bellyShade = shade(fur.belly, 15);
 
       // Background
       if (bg.drawBg) bg.drawBg(ctx);
       else { ctx.fillStyle = "#87CEEB"; ctx.fillRect(0, 0, CW, CH); }
 
-      const OL = GH_OL;
-
-      // Tail with outline
+      // Tail — smooth curvy with warm outline
       ctx.strokeStyle = fur.inner; ctx.lineWidth = 4; ctx.lineCap = "round";
-      ctx.beginPath(); ctx.moveTo(MX, MY+45);
-      ctx.bezierCurveTo(MX+40, MY+60, MX+50, MY+30, MX+60, MY+50); ctx.stroke();
-      ol(() => { ctx.beginPath(); ctx.moveTo(MX, MY+45);
-        ctx.bezierCurveTo(MX+40, MY+60, MX+50, MY+30, MX+60, MY+50); }, OL, 1);
+      ctx.beginPath(); ctx.moveTo(MX+2, MY+42);
+      ctx.bezierCurveTo(MX+35, MY+58, MX+48, MY+28, MX+58, MY+48); ctx.stroke();
+      ol(() => { ctx.beginPath(); ctx.moveTo(MX+2, MY+42);
+        ctx.bezierCurveTo(MX+35, MY+58, MX+48, MY+28, MX+58, MY+48); }, GH_OL, 1);
 
       // Back outfit (cape draws behind body)
       if (sel.outfit > 0 && outfits[sel.outfit].name === "Cape") {
         outfits[sel.outfit].draw(ctx, MX, MY, fur, true);
       }
 
-      // Body with shading and outline
-      ctx.fillStyle = fur.body;
-      ctx.beginPath(); ctx.ellipse(MX, MY+25, 30, 35, 0, 0, Math.PI*2); ctx.fill();
-      // Body shading
-      ctx.fillStyle = shade(fur.body, 18);
-      ctx.beginPath(); ctx.ellipse(MX+5, MY+30, 18, 22, 0.1, 0, Math.PI*2); ctx.fill();
-      ol(() => { ctx.beginPath(); ctx.ellipse(MX, MY+25, 30, 35, 0, 0, Math.PI*2); }, OL);
+      // Body — smooth gradient shading
+      gradBody(MX, MY+25, 30, 35, fur.body, bodyShade);
+      ol(() => { ctx.beginPath(); ctx.ellipse(MX, MY+25, 30, 35, 0, 0, Math.PI*2); }, GH_OL, 1.8);
 
-      // Belly
-      ctx.fillStyle = fur.belly;
-      ctx.beginPath(); ctx.ellipse(MX, MY+30, 18, 22, 0, 0, Math.PI*2); ctx.fill();
+      // Belly — soft gradient
+      gradBody(MX, MY+30, 18, 22, fur.belly, bellyShade);
 
       // Outfit (front)
       if (sel.outfit > 0 && outfits[sel.outfit].name !== "Cape") {
         outfits[sel.outfit].draw(ctx, MX, MY, fur);
       }
 
-      // Arms with shading and outline
-      ctx.fillStyle = fur.body;
+      // Arms — smoother, rounder
       [[-1],[1]].forEach(([s]) => {
+        ctx.fillStyle = fur.body;
         ctx.beginPath();
-        ctx.moveTo(MX+s*28, MY+8);
-        ctx.quadraticCurveTo(MX+s*38, MY+22, MX+s*30, MY+38);
-        ctx.quadraticCurveTo(MX+s*22, MY+40, MX+s*22, MY+28);
-        ctx.quadraticCurveTo(MX+s*24, MY+14, MX+s*28, MY+8);
+        ctx.moveTo(MX+s*28, MY+10);
+        ctx.quadraticCurveTo(MX+s*36, MY+22, MX+s*28, MY+36);
+        ctx.quadraticCurveTo(MX+s*22, MY+38, MX+s*22, MY+28);
+        ctx.quadraticCurveTo(MX+s*23, MY+16, MX+s*28, MY+10);
         ctx.fill();
         ol(() => {
-          ctx.beginPath(); ctx.moveTo(MX+s*28, MY+8);
-          ctx.quadraticCurveTo(MX+s*38, MY+22, MX+s*30, MY+38);
-          ctx.quadraticCurveTo(MX+s*22, MY+40, MX+s*22, MY+28);
-          ctx.quadraticCurveTo(MX+s*24, MY+14, MX+s*28, MY+8);
-        }, OL);
+          ctx.beginPath(); ctx.moveTo(MX+s*28, MY+10);
+          ctx.quadraticCurveTo(MX+s*36, MY+22, MX+s*28, MY+36);
+          ctx.quadraticCurveTo(MX+s*22, MY+38, MX+s*22, MY+28);
+          ctx.quadraticCurveTo(MX+s*23, MY+16, MX+s*28, MY+10);
+        }, GH_OL, 1.5);
       });
-      // Paws
+      // Paws — rounder
       ctx.fillStyle = fur.inner;
-      ctx.beginPath(); ctx.ellipse(MX-29, MY+37, 5, 4, 0.2, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(MX+29, MY+37, 5, 4, -0.2, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(MX-26, MY+36, 5, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(MX+26, MY+36, 5, 0, Math.PI*2); ctx.fill();
 
-      // Head with shading and outline — bigger for anime chibi style
-      ctx.fillStyle = fur.body;
-      ctx.beginPath(); ctx.arc(MX, MY-15, 32, 0, Math.PI*2); ctx.fill();
-      // Head shading
-      ctx.fillStyle = shade(fur.body, 15);
-      ctx.beginPath(); ctx.arc(MX+6, MY-10, 20, 0, Math.PI*2); ctx.fill();
-      // Reapply main head to keep center bright
-      ctx.fillStyle = fur.body;
-      ctx.beginPath(); ctx.arc(MX-2, MY-18, 22, 0, Math.PI*2); ctx.fill();
-      ol(() => { ctx.beginPath(); ctx.arc(MX, MY-15, 32, 0, Math.PI*2); }, OL);
+      // Head — bigger, rounder, smooth gradient shading
+      gradBody(MX, MY-16, 34, 32, fur.body, bodyShade);
+      ol(() => { ctx.beginPath(); ctx.ellipse(MX, MY-16, 34, 32, 0, 0, Math.PI*2); }, GH_OL, 2);
 
       // Ears (selected style)
       drawEars(fur);
 
-      // Eyes (selected style — now anime-big)
+      // Eyes (selected style)
       drawEyes();
 
-      // Nose — small cute button
-      ctx.fillStyle = "#ff8faa";
-      ctx.beginPath(); ctx.ellipse(MX, MY-6, 4, 3, 0, 0, Math.PI*2); ctx.fill();
-      ol(() => { ctx.beginPath(); ctx.ellipse(MX, MY-6, 4, 3, 0, 0, Math.PI*2); }, GH_OL, 1);
+      // Nose — cute pink triangle-ish
+      ctx.fillStyle = "#e8889a";
+      ctx.beginPath(); ctx.ellipse(MX, MY-4, 3.5, 2.5, 0, 0, Math.PI*2); ctx.fill();
+      // Nose highlight
+      ctx.fillStyle = "rgba(255,255,255,0.3)";
+      ctx.beginPath(); ctx.arc(MX-1, MY-5, 1.2, 0, Math.PI*2); ctx.fill();
 
-      // Whiskers — warm, subtle
-      ctx.strokeStyle = "rgba(72,48,32,0.2)"; ctx.lineWidth = 1;
-      [[-1,-2],[-1,0],[-1,2],[1,-2],[1,0],[1,2]].forEach(([dx,dy]) => {
-        ctx.beginPath(); ctx.moveTo(MX+dx*6, MY-4); ctx.lineTo(MX+dx*30, MY-4+dy*3); ctx.stroke();
+      // Whiskers — delicate, warm
+      ctx.strokeStyle = "rgba(72,48,32,0.18)"; ctx.lineWidth = 0.8; ctx.lineCap = "round";
+      [[-1,-1.5],[-1,0.5],[-1,2.5],[1,-1.5],[1,0.5],[1,2.5]].forEach(([dx,dy]) => {
+        ctx.beginPath(); ctx.moveTo(MX+dx*5, MY-2); ctx.lineTo(MX+dx*28, MY-2+dy*3); ctx.stroke();
       });
 
       // Mouth (selected style)
@@ -1872,12 +1876,12 @@
       // Cheeks (selected style)
       drawCheeks(fur);
 
-      // Feet with outline
+      // Feet — round, cute
       ctx.fillStyle = fur.inner;
-      ctx.beginPath(); ctx.ellipse(MX-14, MY+58, 10, 5, 0, 0, Math.PI*2); ctx.fill();
-      ol(() => { ctx.beginPath(); ctx.ellipse(MX-14, MY+58, 10, 5, 0, 0, Math.PI*2); }, OL, 1);
-      ctx.beginPath(); ctx.ellipse(MX+14, MY+58, 10, 5, 0, 0, Math.PI*2); ctx.fill();
-      ol(() => { ctx.beginPath(); ctx.ellipse(MX+14, MY+58, 10, 5, 0, 0, Math.PI*2); }, OL, 1);
+      ctx.beginPath(); ctx.ellipse(MX-13, MY+57, 10, 5, -0.1, 0, Math.PI*2); ctx.fill();
+      ol(() => { ctx.beginPath(); ctx.ellipse(MX-13, MY+57, 10, 5, -0.1, 0, Math.PI*2); }, GH_OL, 1);
+      ctx.beginPath(); ctx.ellipse(MX+13, MY+57, 10, 5, 0.1, 0, Math.PI*2); ctx.fill();
+      ol(() => { ctx.beginPath(); ctx.ellipse(MX+13, MY+57, 10, 5, 0.1, 0, Math.PI*2); }, GH_OL, 1);
 
       // Hat
       if (sel.hat > 0) hats[sel.hat].draw(ctx, MX, MY, fur);
