@@ -1180,7 +1180,58 @@
       { name: "Golden", body: "#daa520", belly: "#f5d68a", inner: "#f0c0c0" },
       { name: "Pink", body: "#e8a0b0", belly: "#f5d0d8", inner: "#ffcccc" },
       { name: "Cream", body: "#f5deb3", belly: "#fff8e7", inner: "#ffcccc" },
-      { name: "Blue", body: "#6ca0dc", belly: "#a8d0f0", inner: "#e0c0d0" }
+      { name: "Blue", body: "#6ca0dc", belly: "#a8d0f0", inner: "#e0c0d0" },
+      { name: "Lilac", body: "#b8a0d0", belly: "#d8c8e8", inner: "#e8c0d0" },
+      { name: "Mint", body: "#7cc0a0", belly: "#b0e0c8", inner: "#d0c8c0" },
+      { name: "Peach", body: "#f0b088", belly: "#f8d8c0", inner: "#ffcccc" },
+      { name: "Slate", body: "#708090", belly: "#a0b0c0", inner: "#d0b0b0" }
+    ];
+    const earStyles = [
+      { name: "Round" },
+      { name: "Pointy" },
+      { name: "Floppy" },
+      { name: "Tiny" },
+      { name: "Big" },
+      { name: "Tufted" },
+      { name: "Folded" },
+      { name: "Curly" }
+    ];
+    const eyeStyles = [
+      { name: "Classic" },
+      { name: "Sparkle" },
+      { name: "Sleepy" },
+      { name: "Cat" },
+      { name: "Heart" },
+      { name: "Star" },
+      { name: "Wink" },
+      { name: "Closed" },
+      { name: "Dot" },
+      { name: "Lashes" },
+      { name: "Angry" },
+      { name: "Sad" }
+    ];
+    const mouthStyles = [
+      { name: "Smile" },
+      { name: "Open" },
+      { name: "Cat" },
+      { name: "Smirk" },
+      { name: "Tongue" },
+      { name: "O" },
+      { name: "Grin" },
+      { name: "Pout" },
+      { name: "Fangs" },
+      { name: "Blep" }
+    ];
+    const cheekStyles = [
+      { name: "None" },
+      { name: "Blush" },
+      { name: "Freckles" },
+      { name: "Hearts" },
+      { name: "Stars" },
+      { name: "Rosy" },
+      { name: "Swirl" },
+      { name: "Dots" },
+      { name: "Sparkle" }
     ];
     const hats = [
       { name: "None" },
@@ -1197,7 +1248,12 @@
       { name: "Beanie", draw: drawBeanie },
       { name: "Halo", draw: drawHalo },
       { name: "Viking", draw: drawVikingHelmet },
-      { name: "Party", draw: drawPartyHat }
+      { name: "Party", draw: drawPartyHat },
+      { name: "Bunny", draw: drawBunnyEars },
+      { name: "Headband", draw: drawHeadband },
+      { name: "Nurse", draw: drawNurseHat },
+      { name: "Witch", draw: drawWitchHat },
+      { name: "Mushroom", draw: drawMushroomHat }
     ];
     const outfits = [
       { name: "None" },
@@ -1214,7 +1270,12 @@
       { name: "Princess", draw: drawPrincess },
       { name: "Jersey", draw: drawJersey },
       { name: "Apron", draw: drawApron },
-      { name: "Kimono", draw: drawKimono }
+      { name: "Kimono", draw: drawKimono },
+      { name: "Sailor", draw: drawSailor },
+      { name: "Poncho", draw: drawPoncho },
+      { name: "Vest", draw: drawVest },
+      { name: "Raincoat", draw: drawRaincoat },
+      { name: "Onesie", draw: drawOnesie }
     ];
     const accessories = [
       { name: "None" },
@@ -1231,7 +1292,12 @@
       { name: "Balloon", draw: drawBalloon },
       { name: "Mustache", draw: drawMustache },
       { name: "Book", draw: drawBook },
-      { name: "Sparkles", draw: drawSparkles }
+      { name: "Sparkles", draw: drawSparkles },
+      { name: "Lollipop", draw: drawLollipop },
+      { name: "Headphones", draw: drawHeadphones },
+      { name: "Bandaid", draw: drawBandaid },
+      { name: "Scythe", draw: drawScythe },
+      { name: "Umbrella", draw: drawUmbrella }
     ];
     const backgrounds = [
       { name: "Sky", drawBg: drawBgSky },
@@ -1241,10 +1307,14 @@
       { name: "Cheese", drawBg: drawBgCheese },
       { name: "Castle", drawBg: drawBgCastle },
       { name: "Beach", drawBg: drawBgBeach },
-      { name: "Space", drawBg: drawBgSpace }
+      { name: "Space", drawBg: drawBgSpace },
+      { name: "Cozy", drawBg: drawBgCozy },
+      { name: "Rainy", drawBg: drawBgRainy },
+      { name: "Forest", drawBg: drawBgForest },
+      { name: "Cherry", drawBg: drawBgCherry }
     ];
 
-    let sel = { fur: 0, hat: 0, outfit: 0, acc: 0, bg: 0 };
+    let sel = { fur: 0, ears: 0, eyes: 0, mouth: 0, cheeks: 0, hat: 0, outfit: 0, acc: 0, bg: 0 };
 
     // Mouse body at center
     const MX = CW / 2, MY = CH / 2 + 15;
@@ -1373,6 +1443,304 @@
       ctx.beginPath(); ctx.ellipse(CW - 35, CH - 40, 30, 8, -0.3, 0, Math.PI * 2); ctx.stroke();
     }
 
+    // Outline helper for cel-shaded look
+    function outline(shape, color, width) {
+      ctx.strokeStyle = color || "rgba(0,0,0,0.25)";
+      ctx.lineWidth = width || 1.5;
+      ctx.lineJoin = "round";
+      shape();
+      ctx.stroke();
+    }
+
+    // ----- Ear drawing functions -----
+    function drawEars(fur) {
+      const e = sel.ears;
+      ctx.fillStyle = fur.body;
+      const ol = "rgba(0,0,0,0.18)";
+      if (e === 0) { // Round (default)
+        ctx.beginPath(); ctx.ellipse(MX - 22, MY - 40, 15, 18, -0.3, 0, Math.PI * 2); ctx.fill();
+        outline(() => { ctx.beginPath(); ctx.ellipse(MX - 22, MY - 40, 15, 18, -0.3, 0, Math.PI * 2); }, ol);
+        ctx.beginPath(); ctx.ellipse(MX + 22, MY - 40, 15, 18, 0.3, 0, Math.PI * 2); ctx.fill();
+        outline(() => { ctx.beginPath(); ctx.ellipse(MX + 22, MY - 40, 15, 18, 0.3, 0, Math.PI * 2); }, ol);
+        ctx.fillStyle = fur.inner;
+        ctx.beginPath(); ctx.ellipse(MX - 22, MY - 40, 10, 12, -0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(MX + 22, MY - 40, 10, 12, 0.3, 0, Math.PI * 2); ctx.fill();
+      } else if (e === 1) { // Pointy
+        [[-1, -0.3], [1, 0.3]].forEach(([s, r]) => {
+          ctx.fillStyle = fur.body;
+          ctx.beginPath(); ctx.moveTo(MX + s * 10, MY - 28); ctx.lineTo(MX + s * 18, MY - 62); ctx.lineTo(MX + s * 34, MY - 30); ctx.closePath(); ctx.fill();
+          outline(() => { ctx.beginPath(); ctx.moveTo(MX + s * 10, MY - 28); ctx.lineTo(MX + s * 18, MY - 62); ctx.lineTo(MX + s * 34, MY - 30); ctx.closePath(); }, ol);
+          ctx.fillStyle = fur.inner;
+          ctx.beginPath(); ctx.moveTo(MX + s * 14, MY - 30); ctx.lineTo(MX + s * 19, MY - 52); ctx.lineTo(MX + s * 30, MY - 32); ctx.closePath(); ctx.fill();
+        });
+      } else if (e === 2) { // Floppy
+        ctx.beginPath(); ctx.ellipse(MX - 30, MY - 20, 14, 22, -0.8, 0, Math.PI * 2); ctx.fill();
+        outline(() => { ctx.beginPath(); ctx.ellipse(MX - 30, MY - 20, 14, 22, -0.8, 0, Math.PI * 2); }, ol);
+        ctx.beginPath(); ctx.ellipse(MX + 30, MY - 20, 14, 22, 0.8, 0, Math.PI * 2); ctx.fill();
+        outline(() => { ctx.beginPath(); ctx.ellipse(MX + 30, MY - 20, 14, 22, 0.8, 0, Math.PI * 2); }, ol);
+        ctx.fillStyle = fur.inner;
+        ctx.beginPath(); ctx.ellipse(MX - 30, MY - 20, 9, 15, -0.8, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(MX + 30, MY - 20, 9, 15, 0.8, 0, Math.PI * 2); ctx.fill();
+      } else if (e === 3) { // Tiny
+        ctx.beginPath(); ctx.ellipse(MX - 18, MY - 38, 8, 10, -0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(MX + 18, MY - 38, 8, 10, 0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = fur.inner;
+        ctx.beginPath(); ctx.ellipse(MX - 18, MY - 38, 5, 6, -0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(MX + 18, MY - 38, 5, 6, 0.3, 0, Math.PI * 2); ctx.fill();
+      } else if (e === 4) { // Big
+        ctx.beginPath(); ctx.ellipse(MX - 26, MY - 42, 20, 24, -0.25, 0, Math.PI * 2); ctx.fill();
+        outline(() => { ctx.beginPath(); ctx.ellipse(MX - 26, MY - 42, 20, 24, -0.25, 0, Math.PI * 2); }, ol);
+        ctx.beginPath(); ctx.ellipse(MX + 26, MY - 42, 20, 24, 0.25, 0, Math.PI * 2); ctx.fill();
+        outline(() => { ctx.beginPath(); ctx.ellipse(MX + 26, MY - 42, 20, 24, 0.25, 0, Math.PI * 2); }, ol);
+        ctx.fillStyle = fur.inner;
+        ctx.beginPath(); ctx.ellipse(MX - 26, MY - 42, 14, 17, -0.25, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(MX + 26, MY - 42, 14, 17, 0.25, 0, Math.PI * 2); ctx.fill();
+      } else if (e === 5) { // Tufted
+        ctx.beginPath(); ctx.ellipse(MX - 22, MY - 40, 15, 18, -0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(MX + 22, MY - 40, 15, 18, 0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = fur.inner;
+        ctx.beginPath(); ctx.ellipse(MX - 22, MY - 40, 10, 12, -0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(MX + 22, MY - 40, 10, 12, 0.3, 0, Math.PI * 2); ctx.fill();
+        // Tufts
+        ctx.fillStyle = fur.belly;
+        [[-22, -58], [-16, -56], [-28, -55], [22, -58], [16, -56], [28, -55]].forEach(([x, y]) => {
+          ctx.beginPath(); ctx.ellipse(MX + x, MY + y, 3, 5, 0, 0, Math.PI * 2); ctx.fill();
+        });
+      } else if (e === 6) { // Folded
+        ctx.beginPath(); ctx.ellipse(MX - 20, MY - 35, 16, 14, -0.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(MX + 20, MY - 35, 16, 14, 0.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = fur.inner;
+        ctx.beginPath(); ctx.ellipse(MX - 20, MY - 35, 10, 9, -0.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(MX + 20, MY - 35, 10, 9, 0.5, 0, Math.PI * 2); ctx.fill();
+        // Fold line
+        ctx.strokeStyle = ol; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(MX - 12, MY - 38); ctx.lineTo(MX - 28, MY - 32); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(MX + 12, MY - 38); ctx.lineTo(MX + 28, MY - 32); ctx.stroke();
+      } else if (e === 7) { // Curly
+        [[-1], [1]].forEach(([s]) => {
+          ctx.fillStyle = fur.body;
+          ctx.beginPath(); ctx.arc(MX + s * 22, MY - 42, 14, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(MX + s * 16, MY - 50, 8, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(MX + s * 28, MY - 48, 7, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = fur.inner;
+          ctx.beginPath(); ctx.arc(MX + s * 22, MY - 42, 8, 0, Math.PI * 2); ctx.fill();
+        });
+      }
+    }
+
+    // ----- Eye drawing functions -----
+    function drawEyes() {
+      const e = sel.eyes;
+      const ex = [-10, 10], ey = MY - 18;
+      if (e === 0) { // Classic
+        ex.forEach(x => {
+          ctx.fillStyle = "#222";
+          ctx.beginPath(); ctx.arc(MX + x, ey, 5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.arc(MX + x + 1.5, ey - 2, 2, 0, Math.PI * 2); ctx.fill();
+        });
+      } else if (e === 1) { // Sparkle
+        ex.forEach(x => {
+          ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.arc(MX + x, ey, 6, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#5588cc";
+          ctx.beginPath(); ctx.arc(MX + x, ey, 5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#222";
+          ctx.beginPath(); ctx.arc(MX + x, ey + 0.5, 3, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.arc(MX + x - 1.5, ey - 2, 2, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(MX + x + 2, ey + 1, 1, 0, Math.PI * 2); ctx.fill();
+        });
+      } else if (e === 2) { // Sleepy
+        ex.forEach(x => {
+          ctx.strokeStyle = "#222"; ctx.lineWidth = 2; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.arc(MX + x, ey, 5, 0.2, Math.PI - 0.2); ctx.stroke();
+        });
+      } else if (e === 3) { // Cat
+        ex.forEach(x => {
+          ctx.fillStyle = "#90cc40";
+          ctx.beginPath(); ctx.ellipse(MX + x, ey, 5.5, 5, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#222";
+          ctx.beginPath(); ctx.ellipse(MX + x, ey, 2, 5, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.arc(MX + x - 1, ey - 2, 1.5, 0, Math.PI * 2); ctx.fill();
+        });
+      } else if (e === 4) { // Heart
+        ex.forEach(x => {
+          ctx.fillStyle = "#ff5588";
+          ctx.beginPath(); ctx.arc(MX + x - 2.5, ey - 1.5, 3, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(MX + x + 2.5, ey - 1.5, 3, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(MX + x - 5, ey); ctx.lineTo(MX + x, ey + 5); ctx.lineTo(MX + x + 5, ey); ctx.fill();
+        });
+      } else if (e === 5) { // Star
+        ex.forEach(x => {
+          ctx.fillStyle = "#ffc83d";
+          ctx.beginPath();
+          for (let i = 0; i < 5; i++) {
+            const a = Math.PI * 2 * i / 5 - Math.PI / 2;
+            const a2 = a + Math.PI / 5;
+            ctx[i === 0 ? "moveTo" : "lineTo"](MX + x + Math.cos(a) * 5, ey + Math.sin(a) * 5);
+            ctx.lineTo(MX + x + Math.cos(a2) * 2.5, ey + Math.sin(a2) * 2.5);
+          }
+          ctx.closePath(); ctx.fill();
+        });
+      } else if (e === 6) { // Wink
+        ctx.fillStyle = "#222";
+        ctx.beginPath(); ctx.arc(MX - 10, ey, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#fff";
+        ctx.beginPath(); ctx.arc(MX - 8.5, ey - 2, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "#222"; ctx.lineWidth = 2; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.arc(MX + 10, ey, 5, 0.2, Math.PI - 0.2); ctx.stroke();
+      } else if (e === 7) { // Closed
+        ex.forEach(x => {
+          ctx.strokeStyle = "#222"; ctx.lineWidth = 2; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.arc(MX + x, ey + 1, 4, Math.PI + 0.3, -0.3); ctx.stroke();
+        });
+      } else if (e === 8) { // Dot
+        ex.forEach(x => {
+          ctx.fillStyle = "#222";
+          ctx.beginPath(); ctx.arc(MX + x, ey, 2.5, 0, Math.PI * 2); ctx.fill();
+        });
+      } else if (e === 9) { // Lashes
+        ex.forEach((x, idx) => {
+          ctx.fillStyle = "#222";
+          ctx.beginPath(); ctx.arc(MX + x, ey, 5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.arc(MX + x + 1.5, ey - 2, 2, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = "#222"; ctx.lineWidth = 1.5; ctx.lineCap = "round";
+          const s = idx === 0 ? -1 : 1;
+          ctx.beginPath(); ctx.moveTo(MX + x + s * 4, ey - 4); ctx.lineTo(MX + x + s * 7, ey - 7); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(MX + x + s * 5, ey - 2); ctx.lineTo(MX + x + s * 8, ey - 4); ctx.stroke();
+        });
+      } else if (e === 10) { // Angry
+        ex.forEach((x, idx) => {
+          ctx.fillStyle = "#222";
+          ctx.beginPath(); ctx.arc(MX + x, ey, 4.5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.arc(MX + x + 1, ey - 1.5, 1.5, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = "#222"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+          const s = idx === 0 ? 1 : -1;
+          ctx.beginPath(); ctx.moveTo(MX + x - 5, ey - 7 - s); ctx.lineTo(MX + x + 5, ey - 7 + s); ctx.stroke();
+        });
+      } else if (e === 11) { // Sad
+        ex.forEach((x, idx) => {
+          ctx.fillStyle = "#222";
+          ctx.beginPath(); ctx.arc(MX + x, ey, 5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.arc(MX + x + 1, ey - 2, 2, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = "#222"; ctx.lineWidth = 2; ctx.lineCap = "round";
+          const s = idx === 0 ? -1 : 1;
+          ctx.beginPath(); ctx.moveTo(MX + x - 5, ey - 8 + s); ctx.lineTo(MX + x + 5, ey - 8 - s); ctx.stroke();
+        });
+      }
+    }
+
+    // ----- Mouth drawing functions -----
+    function drawMouth() {
+      const m = sel.mouth;
+      const my = MY - 4;
+      ctx.lineCap = "round";
+      if (m === 0) { // Smile
+        ctx.strokeStyle = "#b06070"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(MX, my, 4, 0.1, Math.PI - 0.1); ctx.stroke();
+      } else if (m === 1) { // Open
+        ctx.fillStyle = "#c04060";
+        ctx.beginPath(); ctx.ellipse(MX, my + 1, 4, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#ff8090";
+        ctx.beginPath(); ctx.ellipse(MX, my + 2, 2, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+      } else if (m === 2) { // Cat (w)
+        ctx.strokeStyle = "#b06070"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(MX - 5, my); ctx.lineTo(MX - 1, my + 3); ctx.lineTo(MX, my + 1);
+        ctx.lineTo(MX + 1, my + 3); ctx.lineTo(MX + 5, my); ctx.stroke();
+      } else if (m === 3) { // Smirk
+        ctx.strokeStyle = "#b06070"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(MX + 2, my, 4, 0.3, Math.PI - 0.5); ctx.stroke();
+      } else if (m === 4) { // Tongue
+        ctx.strokeStyle = "#b06070"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(MX, my, 4, 0.1, Math.PI - 0.1); ctx.stroke();
+        ctx.fillStyle = "#ff7088";
+        ctx.beginPath(); ctx.ellipse(MX, my + 4, 3, 4, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "#d05068"; ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.moveTo(MX, my + 2); ctx.lineTo(MX, my + 7); ctx.stroke();
+      } else if (m === 5) { // O
+        ctx.fillStyle = "#c04060";
+        ctx.beginPath(); ctx.arc(MX, my + 1, 3.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#222";
+        ctx.beginPath(); ctx.arc(MX, my + 1, 2, 0, Math.PI * 2); ctx.fill();
+      } else if (m === 6) { // Grin
+        ctx.fillStyle = "#c04060";
+        ctx.beginPath(); ctx.arc(MX, my, 5, 0, Math.PI); ctx.fill();
+        ctx.fillStyle = "#fff";
+        ctx.beginPath(); ctx.moveTo(MX - 5, my); ctx.lineTo(MX + 5, my); ctx.lineTo(MX + 4, my + 2); ctx.lineTo(MX - 4, my + 2); ctx.fill();
+      } else if (m === 7) { // Pout
+        ctx.strokeStyle = "#b06070"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(MX, my + 3, 4, Math.PI + 0.2, -0.2); ctx.stroke();
+      } else if (m === 8) { // Fangs
+        ctx.strokeStyle = "#b06070"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(MX, my, 4, 0.1, Math.PI - 0.1); ctx.stroke();
+        ctx.fillStyle = "#fff";
+        ctx.beginPath(); ctx.moveTo(MX - 3, my); ctx.lineTo(MX - 2, my + 4); ctx.lineTo(MX - 1, my); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(MX + 1, my); ctx.lineTo(MX + 2, my + 4); ctx.lineTo(MX + 3, my); ctx.fill();
+      } else if (m === 9) { // Blep
+        ctx.strokeStyle = "#b06070"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(MX - 4, my); ctx.lineTo(MX + 4, my); ctx.stroke();
+        ctx.fillStyle = "#ff7088";
+        ctx.beginPath(); ctx.ellipse(MX + 3, my + 3, 2.5, 3, 0.2, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+
+    // ----- Cheek drawing functions -----
+    function drawCheeks(fur) {
+      const c = sel.cheeks;
+      if (c === 0) return;
+      if (c === 1) { // Blush
+        ctx.fillStyle = "rgba(255,120,140,0.25)";
+        ctx.beginPath(); ctx.ellipse(MX - 16, MY - 12, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(MX + 16, MY - 12, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+      } else if (c === 2) { // Freckles
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        [[-14,-14],[-18,-10],[-12,-10],[14,-14],[18,-10],[12,-10]].forEach(([x,y]) => {
+          ctx.beginPath(); ctx.arc(MX + x, MY + y, 1, 0, Math.PI * 2); ctx.fill();
+        });
+      } else if (c === 3) { // Hearts
+        ctx.fillStyle = "rgba(255,80,120,0.4)";
+        [[-16, -12], [16, -12]].forEach(([x, y]) => {
+          ctx.beginPath(); ctx.arc(MX + x - 1.5, MY + y - 1, 2, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(MX + x + 1.5, MY + y - 1, 2, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(MX + x - 3, MY + y); ctx.lineTo(MX + x, MY + y + 3); ctx.lineTo(MX + x + 3, MY + y); ctx.fill();
+        });
+      } else if (c === 4) { // Stars
+        ctx.fillStyle = "rgba(255,200,60,0.5)";
+        [[-16, -12], [16, -12]].forEach(([x, y]) => {
+          ctx.font = "6px serif";
+          ctx.fillText("★", MX + x - 3, MY + y + 2);
+        });
+      } else if (c === 5) { // Rosy
+        ctx.fillStyle = "rgba(255,100,120,0.15)";
+        ctx.beginPath(); ctx.arc(MX - 16, MY - 12, 8, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(MX + 16, MY - 12, 8, 0, Math.PI * 2); ctx.fill();
+      } else if (c === 6) { // Swirl
+        ctx.strokeStyle = "rgba(255,120,140,0.35)"; ctx.lineWidth = 1;
+        [[-16, -12], [16, -12]].forEach(([x, y]) => {
+          ctx.beginPath(); ctx.arc(MX + x, MY + y, 3, 0, Math.PI * 1.5); ctx.stroke();
+          ctx.beginPath(); ctx.arc(MX + x, MY + y, 5, 0, Math.PI); ctx.stroke();
+        });
+      } else if (c === 7) { // Dots
+        ctx.fillStyle = "rgba(255,120,140,0.3)";
+        [[-18,-12],[-14,-12],[-16,-9],[18,-12],[14,-12],[16,-9]].forEach(([x,y]) => {
+          ctx.beginPath(); ctx.arc(MX + x, MY + y, 1.5, 0, Math.PI * 2); ctx.fill();
+        });
+      } else if (c === 8) { // Sparkle
+        ctx.fillStyle = "rgba(255,220,100,0.5)";
+        [[-17,-13],[-14,-10],[17,-13],[14,-10]].forEach(([x,y]) => {
+          ctx.beginPath();
+          ctx.moveTo(MX+x, MY+y-2.5); ctx.lineTo(MX+x+0.8, MY+y-0.8); ctx.lineTo(MX+x+2.5, MY+y);
+          ctx.lineTo(MX+x+0.8, MY+y+0.8); ctx.lineTo(MX+x, MY+y+2.5); ctx.lineTo(MX+x-0.8, MY+y+0.8);
+          ctx.lineTo(MX+x-2.5, MY+y); ctx.lineTo(MX+x-0.8, MY+y-0.8); ctx.closePath(); ctx.fill();
+        });
+      }
+    }
+
     function drawMouse() {
       const fur = furColors[sel.fur];
       const bg = backgrounds[sel.bg];
@@ -1381,107 +1749,91 @@
       if (bg.drawBg) bg.drawBg(ctx);
       else { ctx.fillStyle = "#87CEEB"; ctx.fillRect(0, 0, CW, CH); }
 
-      // Tail
-      ctx.strokeStyle = fur.inner;
-      ctx.lineWidth = 3;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(MX, MY + 45);
-      ctx.bezierCurveTo(MX + 40, MY + 60, MX + 50, MY + 30, MX + 60, MY + 50);
-      ctx.stroke();
+      const ol = "rgba(0,0,0,0.18)";
+
+      // Tail with outline
+      ctx.strokeStyle = fur.inner; ctx.lineWidth = 4; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(MX, MY + 45);
+      ctx.bezierCurveTo(MX + 40, MY + 60, MX + 50, MY + 30, MX + 60, MY + 50); ctx.stroke();
+      ctx.strokeStyle = ol; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(MX, MY + 45);
+      ctx.bezierCurveTo(MX + 40, MY + 60, MX + 50, MY + 30, MX + 60, MY + 50); ctx.stroke();
 
       // Back outfit (cape draws behind body)
       if (sel.outfit > 0 && outfits[sel.outfit].name === "Cape") {
         outfits[sel.outfit].draw(ctx, MX, MY, fur, true);
       }
 
-      // Body
+      // Body with outline
       ctx.fillStyle = fur.body;
-      ctx.beginPath();
-      ctx.ellipse(MX, MY + 25, 30, 35, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.ellipse(MX, MY + 25, 30, 35, 0, 0, Math.PI * 2); ctx.fill();
+      outline(() => { ctx.beginPath(); ctx.ellipse(MX, MY + 25, 30, 35, 0, 0, Math.PI * 2); }, ol);
 
       // Belly
       ctx.fillStyle = fur.belly;
-      ctx.beginPath();
-      ctx.ellipse(MX, MY + 30, 18, 22, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.ellipse(MX, MY + 30, 18, 22, 0, 0, Math.PI * 2); ctx.fill();
 
       // Outfit (front)
       if (sel.outfit > 0 && outfits[sel.outfit].name !== "Cape") {
         outfits[sel.outfit].draw(ctx, MX, MY, fur);
       }
 
-      // Arms — smooth rounded shape
+      // Arms with outline
       ctx.fillStyle = fur.body;
-      // Left arm
-      ctx.beginPath();
-      ctx.moveTo(MX - 28, MY + 8);
-      ctx.quadraticCurveTo(MX - 38, MY + 22, MX - 30, MY + 38);
-      ctx.quadraticCurveTo(MX - 22, MY + 40, MX - 22, MY + 28);
-      ctx.quadraticCurveTo(MX - 24, MY + 14, MX - 28, MY + 8);
-      ctx.fill();
-      // Right arm
-      ctx.beginPath();
-      ctx.moveTo(MX + 28, MY + 8);
-      ctx.quadraticCurveTo(MX + 38, MY + 22, MX + 30, MY + 38);
-      ctx.quadraticCurveTo(MX + 22, MY + 40, MX + 22, MY + 28);
-      ctx.quadraticCurveTo(MX + 24, MY + 14, MX + 28, MY + 8);
-      ctx.fill();
+      [[-1], [1]].forEach(([s]) => {
+        ctx.beginPath();
+        ctx.moveTo(MX + s * 28, MY + 8);
+        ctx.quadraticCurveTo(MX + s * 38, MY + 22, MX + s * 30, MY + 38);
+        ctx.quadraticCurveTo(MX + s * 22, MY + 40, MX + s * 22, MY + 28);
+        ctx.quadraticCurveTo(MX + s * 24, MY + 14, MX + s * 28, MY + 8);
+        ctx.fill();
+        outline(() => {
+          ctx.beginPath(); ctx.moveTo(MX + s * 28, MY + 8);
+          ctx.quadraticCurveTo(MX + s * 38, MY + 22, MX + s * 30, MY + 38);
+          ctx.quadraticCurveTo(MX + s * 22, MY + 40, MX + s * 22, MY + 28);
+          ctx.quadraticCurveTo(MX + s * 24, MY + 14, MX + s * 28, MY + 8);
+        }, ol);
+      });
       // Paws
       ctx.fillStyle = fur.inner;
       ctx.beginPath(); ctx.ellipse(MX - 29, MY + 37, 5, 4, 0.2, 0, Math.PI * 2); ctx.fill();
       ctx.beginPath(); ctx.ellipse(MX + 29, MY + 37, 5, 4, -0.2, 0, Math.PI * 2); ctx.fill();
 
-      // Head
+      // Head with outline
       ctx.fillStyle = fur.body;
-      ctx.beginPath();
-      ctx.arc(MX, MY - 15, 28, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(MX, MY - 15, 28, 0, Math.PI * 2); ctx.fill();
+      outline(() => { ctx.beginPath(); ctx.arc(MX, MY - 15, 28, 0, Math.PI * 2); }, ol);
 
-      // Ears
-      ctx.fillStyle = fur.body;
-      ctx.beginPath(); ctx.ellipse(MX - 22, MY - 40, 15, 18, -0.3, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(MX + 22, MY - 40, 15, 18, 0.3, 0, Math.PI * 2); ctx.fill();
-      // Inner ears
-      ctx.fillStyle = fur.inner;
-      ctx.beginPath(); ctx.ellipse(MX - 22, MY - 40, 10, 12, -0.3, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(MX + 22, MY - 40, 10, 12, 0.3, 0, Math.PI * 2); ctx.fill();
+      // Ears (selected style)
+      drawEars(fur);
 
-      // Eyes
-      ctx.fillStyle = "#222";
-      ctx.beginPath(); ctx.arc(MX - 10, MY - 18, 4, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(MX + 10, MY - 18, 4, 0, Math.PI * 2); ctx.fill();
-      // Eye shine
-      ctx.fillStyle = "#fff";
-      ctx.beginPath(); ctx.arc(MX - 9, MY - 20, 1.5, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(MX + 11, MY - 20, 1.5, 0, Math.PI * 2); ctx.fill();
+      // Eyes (selected style)
+      drawEyes();
 
-      // Nose
+      // Nose with outline
       ctx.fillStyle = "#ff8faa";
       ctx.beginPath(); ctx.ellipse(MX, MY - 8, 4, 3, 0, 0, Math.PI * 2); ctx.fill();
+      outline(() => { ctx.beginPath(); ctx.ellipse(MX, MY - 8, 4, 3, 0, 0, Math.PI * 2); }, ol, 0.8);
 
       // Whiskers
-      ctx.strokeStyle = fur.body === "#e8e8e8" ? "#ccc" : "#ddd";
+      ctx.strokeStyle = fur.body === "#e8e8e8" || fur.body === "#f5deb3" ? "#ccc" : "#ddd";
       ctx.lineWidth = 1;
       [[-1, -2], [-1, 0], [-1, 2], [1, -2], [1, 0], [1, 2]].forEach(([dx, dy]) => {
-        ctx.beginPath();
-        ctx.moveTo(MX + dx * 6, MY - 6);
-        ctx.lineTo(MX + dx * 28, MY - 6 + dy * 3);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(MX + dx * 6, MY - 6); ctx.lineTo(MX + dx * 28, MY - 6 + dy * 3); ctx.stroke();
       });
 
-      // Mouth
-      ctx.strokeStyle = "#b06070";
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.arc(MX, MY - 4, 4, 0.1, Math.PI - 0.1);
-      ctx.stroke();
+      // Mouth (selected style)
+      drawMouth();
 
-      // Feet
+      // Cheeks (selected style)
+      drawCheeks(fur);
+
+      // Feet with outline
       ctx.fillStyle = fur.inner;
       ctx.beginPath(); ctx.ellipse(MX - 14, MY + 58, 10, 5, 0, 0, Math.PI * 2); ctx.fill();
+      outline(() => { ctx.beginPath(); ctx.ellipse(MX - 14, MY + 58, 10, 5, 0, 0, Math.PI * 2); }, ol, 0.8);
       ctx.beginPath(); ctx.ellipse(MX + 14, MY + 58, 10, 5, 0, 0, Math.PI * 2); ctx.fill();
+      outline(() => { ctx.beginPath(); ctx.ellipse(MX + 14, MY + 58, 10, 5, 0, 0, Math.PI * 2); }, ol, 0.8);
 
       // Hat
       if (sel.hat > 0) hats[sel.hat].draw(ctx, MX, MY, fur);
@@ -2054,9 +2406,215 @@
       });
     }
 
+    // ----- New hat drawings -----
+    function drawBunnyEars(ctx, mx, my) {
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.ellipse(mx - 12, my - 58, 7, 20, -0.15, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(mx + 12, my - 58, 7, 20, 0.15, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#ffb0c0";
+      ctx.beginPath(); ctx.ellipse(mx - 12, my - 58, 4, 14, -0.15, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(mx + 12, my - 58, 4, 14, 0.15, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.ellipse(mx, my - 40, 18, 5, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    function drawHeadband(ctx, mx, my) {
+      ctx.strokeStyle = "#ff5588"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(mx, my - 20, 28, Math.PI + 0.3, -0.3); ctx.stroke();
+      ctx.fillStyle = "#ff5588";
+      ctx.beginPath(); ctx.arc(mx + 10, my - 46, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(mx + 18, my - 42, 5, 0, Math.PI * 2); ctx.fill();
+    }
+    function drawNurseHat(ctx, mx, my) {
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(mx - 14, my - 50, 28, 16);
+      ctx.strokeStyle = "#ddd"; ctx.lineWidth = 1;
+      ctx.strokeRect(mx - 14, my - 50, 28, 16);
+      ctx.fillStyle = "#e03030";
+      ctx.fillRect(mx - 2, my - 48, 4, 12);
+      ctx.fillRect(mx - 6, my - 44, 12, 4);
+    }
+    function drawWitchHat(ctx, mx, my) {
+      ctx.fillStyle = "#2d1050";
+      ctx.beginPath(); ctx.moveTo(mx, my - 82); ctx.lineTo(mx - 25, my - 38); ctx.lineTo(mx + 25, my - 38); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(mx, my - 38, 30, 6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#8040c0";
+      ctx.fillRect(mx - 18, my - 50, 36, 5);
+      ctx.fillStyle = "#ffc83d";
+      ctx.beginPath(); ctx.arc(mx, my - 48, 3, 0, Math.PI * 2); ctx.fill();
+    }
+    function drawMushroomHat(ctx, mx, my) {
+      ctx.fillStyle = "#e04040";
+      ctx.beginPath(); ctx.arc(mx, my - 42, 25, Math.PI, 0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(mx - 10, my - 50, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(mx + 8, my - 46, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(mx + 2, my - 55, 3.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#f5deb3";
+      ctx.fillRect(mx - 10, my - 42, 20, 5);
+    }
+
+    // ----- New outfit drawings -----
+    function drawSailor(ctx, mx, my) {
+      ctx.fillStyle = "#2244aa";
+      ctx.beginPath(); ctx.moveTo(mx - 26, my + 10); ctx.lineTo(mx + 26, my + 10); ctx.lineTo(mx + 20, my + 48); ctx.lineTo(mx - 20, my + 48); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.moveTo(mx - 14, my + 10); ctx.lineTo(mx, my + 22); ctx.lineTo(mx + 14, my + 10); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(mx - 18, my + 42); ctx.lineTo(mx + 18, my + 42); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(mx - 16, my + 45); ctx.lineTo(mx + 16, my + 45); ctx.stroke();
+    }
+    function drawPoncho(ctx, mx, my) {
+      ctx.fillStyle = "#c04820";
+      ctx.beginPath(); ctx.moveTo(mx, my + 3); ctx.lineTo(mx - 40, my + 35); ctx.lineTo(mx - 30, my + 45);
+      ctx.lineTo(mx, my + 30); ctx.lineTo(mx + 30, my + 45); ctx.lineTo(mx + 40, my + 35); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "#ffc83d"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(mx - 35, my + 38); ctx.lineTo(mx + 35, my + 38); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(mx - 32, my + 42); ctx.lineTo(mx + 32, my + 42); ctx.stroke();
+    }
+    function drawVest(ctx, mx, my) {
+      ctx.fillStyle = "#8B4513";
+      ctx.beginPath(); ctx.moveTo(mx - 22, my + 8); ctx.lineTo(mx - 10, my + 8); ctx.lineTo(mx - 10, my + 42); ctx.lineTo(mx - 22, my + 42); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(mx + 22, my + 8); ctx.lineTo(mx + 10, my + 8); ctx.lineTo(mx + 10, my + 42); ctx.lineTo(mx + 22, my + 42); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#ffc83d";
+      ctx.beginPath(); ctx.arc(mx - 12, my + 20, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(mx + 12, my + 20, 2, 0, Math.PI * 2); ctx.fill();
+    }
+    function drawRaincoat(ctx, mx, my) {
+      ctx.fillStyle = "#ffd700";
+      ctx.beginPath(); ctx.moveTo(mx - 28, my + 5); ctx.lineTo(mx + 28, my + 5); ctx.lineTo(mx + 24, my + 52); ctx.lineTo(mx - 24, my + 52); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.15)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(mx, my + 5); ctx.lineTo(mx, my + 52); ctx.stroke();
+      ctx.fillStyle = "#e8a317";
+      [15, 25, 35].forEach(y => {
+        ctx.beginPath(); ctx.arc(mx + 1, my + y, 2, 0, Math.PI * 2); ctx.fill();
+      });
+    }
+    function drawOnesie(ctx, mx, my) {
+      ctx.fillStyle = "#a0d0f0";
+      ctx.beginPath(); ctx.ellipse(mx, my + 25, 28, 33, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.ellipse(mx, my + 30, 16, 20, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#80b8e0";
+      ctx.beginPath(); ctx.arc(mx, my + 15, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(mx, my + 22, 3, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // ----- New accessory drawings -----
+    function drawLollipop(ctx, mx, my) {
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(mx + 35, my + 5); ctx.lineTo(mx + 35, my + 40); ctx.stroke();
+      ctx.fillStyle = "#ff5588";
+      ctx.beginPath(); ctx.arc(mx + 35, my, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(mx + 35, my, 4, 0, Math.PI * 1.5); ctx.stroke();
+      ctx.beginPath(); ctx.arc(mx + 35, my, 6, Math.PI * 0.5, Math.PI * 2); ctx.stroke();
+    }
+    function drawHeadphones(ctx, mx, my) {
+      ctx.strokeStyle = "#333"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(mx, my - 28, 25, Math.PI + 0.4, -0.4); ctx.stroke();
+      ctx.fillStyle = "#333";
+      ctx.beginPath(); ctx.roundRect(mx - 28, my - 22, 8, 14, 3); ctx.fill();
+      ctx.beginPath(); ctx.roundRect(mx + 20, my - 22, 8, 14, 3); ctx.fill();
+      ctx.fillStyle = "#ff5588";
+      ctx.beginPath(); ctx.roundRect(mx - 27, my - 20, 6, 10, 2); ctx.fill();
+      ctx.beginPath(); ctx.roundRect(mx + 21, my - 20, 6, 10, 2); ctx.fill();
+    }
+    function drawBandaid(ctx, mx, my) {
+      ctx.save(); ctx.translate(mx + 14, my - 20); ctx.rotate(0.4);
+      ctx.fillStyle = "#f0c8a0";
+      ctx.beginPath(); ctx.roundRect(-10, -4, 20, 8, 3); ctx.fill();
+      ctx.fillStyle = "#e8b888";
+      ctx.beginPath(); ctx.roundRect(-3, -2, 6, 4, 1); ctx.fill();
+      ctx.fillStyle = "#d0a070";
+      ctx.beginPath(); ctx.arc(-6, 0, 0.8, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(6, 0, 0.8, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    function drawScythe(ctx, mx, my) {
+      ctx.strokeStyle = "#8B4513"; ctx.lineWidth = 3; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(mx - 30, my + 45); ctx.lineTo(mx - 15, my - 25); ctx.stroke();
+      ctx.fillStyle = "#c0c0c0";
+      ctx.beginPath(); ctx.moveTo(mx - 15, my - 25); ctx.quadraticCurveTo(mx - 5, my - 40, mx + 8, my - 25);
+      ctx.quadraticCurveTo(mx - 2, my - 22, mx - 15, my - 25); ctx.fill();
+    }
+    function drawUmbrella(ctx, mx, my) {
+      ctx.strokeStyle = "#8B4513"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(mx + 35, my - 15); ctx.lineTo(mx + 35, my + 35); ctx.stroke();
+      ctx.beginPath(); ctx.arc(mx + 38, my + 35, 3, 0, Math.PI); ctx.stroke();
+      ctx.fillStyle = "#ff5588";
+      ctx.beginPath(); ctx.arc(mx + 35, my - 15, 18, Math.PI, 0); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "#d04070"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(mx + 26, my - 15, 9, Math.PI, 0); ctx.stroke();
+      ctx.beginPath(); ctx.arc(mx + 44, my - 15, 9, Math.PI, 0); ctx.stroke();
+    }
+
+    // ----- New background drawings -----
+    function drawBgCozy(ctx) {
+      ctx.fillStyle = "#3d2215"; ctx.fillRect(0, 0, CW, CH);
+      ctx.fillStyle = "#5a3a20"; ctx.fillRect(0, CH * 0.6, CW, CH * 0.4);
+      // Fireplace glow
+      const grd = ctx.createRadialGradient(CW * 0.2, CH * 0.8, 0, CW * 0.2, CH * 0.8, CW * 0.3);
+      grd.addColorStop(0, "rgba(255,150,50,0.15)"); grd.addColorStop(1, "transparent");
+      ctx.fillStyle = grd; ctx.fillRect(0, 0, CW, CH);
+      // Rug
+      ctx.fillStyle = "#8B3A3A";
+      ctx.beginPath(); ctx.ellipse(CW / 2, CH * 0.85, CW * 0.35, 20, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    function drawBgRainy(ctx) {
+      const grd = ctx.createLinearGradient(0, 0, 0, CH);
+      grd.addColorStop(0, "#4a5568"); grd.addColorStop(1, "#718096");
+      ctx.fillStyle = grd; ctx.fillRect(0, 0, CW, CH);
+      // Rain
+      ctx.strokeStyle = "rgba(180,200,220,0.3)"; ctx.lineWidth = 1;
+      for (let i = 0; i < 40; i++) {
+        const rx = (i * 37 + 5) % CW, ry = (i * 53 + 11) % CH;
+        ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - 2, ry + 10); ctx.stroke();
+      }
+      // Puddle
+      ctx.fillStyle = "rgba(100,130,160,0.3)";
+      ctx.beginPath(); ctx.ellipse(CW * 0.5, CH - 20, 60, 8, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    function drawBgForest(ctx) {
+      const grd = ctx.createLinearGradient(0, 0, 0, CH);
+      grd.addColorStop(0, "#1a3a1a"); grd.addColorStop(1, "#2d5a2d");
+      ctx.fillStyle = grd; ctx.fillRect(0, 0, CW, CH);
+      // Trees
+      ctx.fillStyle = "#3a2a1a";
+      [[40, 12], [CW - 50, 15], [CW / 2 - 30, 10]].forEach(([x, w]) => {
+        ctx.fillRect(x, CH * 0.3, w, CH * 0.7);
+      });
+      ctx.fillStyle = "#2a5a2a";
+      [[45, CH * 0.15, 40], [CW - 45, CH * 0.2, 35], [CW / 2 - 25, CH * 0.1, 45]].forEach(([x, y, r]) => {
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      });
+      // Grass
+      ctx.fillStyle = "#1a4a1a"; ctx.fillRect(0, CH - 30, CW, 30);
+    }
+    function drawBgCherry(ctx) {
+      const grd = ctx.createLinearGradient(0, 0, 0, CH);
+      grd.addColorStop(0, "#ffd0d8"); grd.addColorStop(1, "#ffe8ec");
+      ctx.fillStyle = grd; ctx.fillRect(0, 0, CW, CH);
+      // Petals
+      ctx.fillStyle = "rgba(255,150,180,0.4)";
+      for (let i = 0; i < 25; i++) {
+        const px = (i * 47 + 13) % CW, py = (i * 31 + 7) % CH;
+        ctx.beginPath(); ctx.ellipse(px, py, 3, 5, (i * 0.7), 0, Math.PI * 2); ctx.fill();
+      }
+      // Ground
+      ctx.fillStyle = "#90c090"; ctx.fillRect(0, CH - 35, CW, 35);
+      ctx.fillStyle = "#78a878";
+      for (let i = 0; i < CW; i += 8) {
+        ctx.beginPath(); ctx.moveTo(i, CH - 35); ctx.lineTo(i + 4, CH - 42); ctx.lineTo(i + 8, CH - 35); ctx.fill();
+      }
+    }
+
     // Picrew-style categories with icons
     const categories = [
       { key: "fur", label: "Fur", icon: "🎨", items: furColors },
+      { key: "ears", label: "Ears", icon: "👂", items: earStyles },
+      { key: "eyes", label: "Eyes", icon: "👀", items: eyeStyles },
+      { key: "mouth", label: "Mouth", icon: "👄", items: mouthStyles },
+      { key: "cheeks", label: "Cheeks", icon: "💗", items: cheekStyles },
       { key: "hat", label: "Hats", icon: "🎩", items: hats },
       { key: "outfit", label: "Outfits", icon: "👗", items: outfits },
       { key: "acc", label: "Items", icon: "✨", items: accessories },
@@ -2065,11 +2623,15 @@
     let activeTab = 0;
 
     const catIcons = {
-      fur: ["🐭","🐭","🐭","🐭","🐭","🐭","🐭","🐭"],
-      hat: ["❌","🎩","👑","🎀","🫐","🧙","🌸","🏴‍☠️","👨‍🍳","👸","🤠","🧶","😇","⚔️","🎉"],
-      outfit: ["❌","🧣","🦸","👗","🎀","🛡️","🧶","🩰","👖","🤵","🧥","👸","⚽","👩‍🍳","🎎"],
-      acc: ["❌","👓","🧀","⚔️","🪄","🎸","😊","🧐","🛡️","🌹","🪽","🎈","🥸","📖","✨"],
-      bg: ["☀️","🌙","🌅","🌿","🧀","🏰","🏖️","🚀"]
+      fur: ["🐭","🐭","🐭","🐭","🐭","🐭","🐭","🐭","🐭","🐭","🐭","🐭"],
+      ears: ["🔵","🔺","🐕","🤏","🐘","🌿","📁","🌀"],
+      eyes: ["👁️","✨","😴","🐱","💖","⭐","😉","😌","⚫","💫","😠","😢"],
+      mouth: ["😊","😮","😸","😏","😛","⭕","😁","😤","🧛","😋"],
+      cheeks: ["❌","😊","🔴","💕","⭐","🌸","🌀","⚪","✨"],
+      hat: ["❌","🎩","👑","🎀","🫐","🧙","🌸","🏴‍☠️","👨‍🍳","👸","🤠","🧶","😇","⚔️","🎉","🐰","💝","⛑️","🧙‍♀️","🍄"],
+      outfit: ["❌","🧣","🦸","👗","🎀","🛡️","🧶","🩰","👖","🤵","🧥","👸","⚽","👩‍🍳","🎎","⚓","🏜️","🦺","🌧️","🐣"],
+      acc: ["❌","👓","🧀","⚔️","🪄","🎸","😊","🧐","🛡️","🌹","🪽","🎈","🥸","📖","✨","🍭","🎧","🩹","⚔️","☂️"],
+      bg: ["☀️","🌙","🌅","🌿","🧀","🏰","🏖️","🚀","🏠","🌧️","🌲","🌸"]
     };
 
     function renderTabs() {
@@ -2105,7 +2667,8 @@
         }
 
         el.addEventListener("click", () => {
-          sel[cat.key] = sel[cat.key] === i && cat.key !== "fur" && cat.key !== "bg" ? 0 : i;
+          const noToggle = ["fur","bg","ears","eyes","mouth"];
+          sel[cat.key] = sel[cat.key] === i && !noToggle.includes(cat.key) ? 0 : i;
           playSqueak();
           renderItems();
           drawMouse();
@@ -2115,7 +2678,7 @@
     }
 
     resetBtn.addEventListener("click", () => {
-      sel = { fur: 0, hat: 0, outfit: 0, acc: 0, bg: 0 };
+      sel = { fur: 0, ears: 0, eyes: 0, mouth: 0, cheeks: 0, hat: 0, outfit: 0, acc: 0, bg: 0 };
       playSqueak();
       renderItems();
       drawMouse();
@@ -2125,6 +2688,10 @@
       randomBtn.addEventListener("click", () => {
         sel = {
           fur: Math.floor(Math.random() * furColors.length),
+          ears: Math.floor(Math.random() * earStyles.length),
+          eyes: Math.floor(Math.random() * eyeStyles.length),
+          mouth: Math.floor(Math.random() * mouthStyles.length),
+          cheeks: Math.floor(Math.random() * cheekStyles.length),
           hat: Math.floor(Math.random() * hats.length),
           outfit: Math.floor(Math.random() * outfits.length),
           acc: Math.floor(Math.random() * accessories.length),
