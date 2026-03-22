@@ -1444,27 +1444,27 @@
     }
 
     // Outline helper for anime cel-shaded look
-    // Ghibli-style outline — dark warm brown, variable width
-    const GH_OL = "rgba(72,48,32,0.55)";
+    // Pokemon-style outline — thick, clean, solid black
+    const PK_OL = "#1a1a2e";
     function ol(cb, c, w) {
-      ctx.strokeStyle = c || GH_OL;
-      ctx.lineWidth = w || 1.8;
+      ctx.strokeStyle = c || PK_OL;
+      ctx.lineWidth = w || 2.5;
       ctx.lineJoin = "round"; ctx.lineCap = "round";
       cb(); ctx.stroke();
     }
-    // Warm shade helper — shifts toward warm brown, not just darker
+    // Pokemon shade — darker, more saturated version of base color
     function shade(hex, amt) {
       let r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-      r = Math.max(0, r - Math.floor(amt * 0.6));
+      r = Math.max(0, r - amt);
       g = Math.max(0, g - amt);
-      b = Math.max(0, b - Math.floor(amt * 1.1));
+      b = Math.max(0, b - amt);
       return `rgb(${r},${g},${b})`;
     }
 
-    // ----- Ear drawing functions (anime style) -----
+    // ----- Ear drawing functions (Pokemon style — bold outlines, flat color) -----
     function drawEars(fur) {
       const e = sel.ears;
-      const OL = GH_OL;
+      const OL = PK_OL;
       function earPair(fn) { [[-1,-0.3],[1,0.3]].forEach(([s,r]) => fn(s,r)); }
       if (e === 0) { // Round
         earPair((s) => {
@@ -1542,69 +1542,58 @@
       }
     }
 
-    // ----- Eye drawing functions (Ghibli style — warm, round, simple) -----
+    // ----- Eye drawing functions (Pokemon style — big, solid black, white shines) -----
     function drawEyes() {
       const e = sel.eyes;
       const EX = [-12, 12], EY = MY - 18;
-      const R = 7.5;
-      function ghibliEye(x, irisColor) {
-        ctx.fillStyle = "#fff";
+      const R = 8;
+      // Pokemon eye — big solid black circle with 2 white shine spots
+      function pkEye(x) {
+        ctx.fillStyle = "#111";
         ctx.beginPath(); ctx.arc(MX+x, EY, R, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = irisColor;
-        ctx.beginPath(); ctx.arc(MX+x, EY+0.5, R-1.5, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#1a1008";
-        ctx.beginPath(); ctx.arc(MX+x, EY+1, R-3.5, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "rgba(255,255,255,0.85)";
-        ctx.beginPath(); ctx.arc(MX+x-1.5, EY-1.5, 2, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "rgba(255,255,255,0.5)";
-        ctx.beginPath(); ctx.arc(MX+x+2, EY+2, 1, 0, Math.PI*2); ctx.fill();
-        ol(() => { ctx.beginPath(); ctx.arc(MX+x, EY, R, 0, Math.PI*2); }, GH_OL, 1.5);
+        // Big shine (upper-left)
+        ctx.fillStyle = "#fff";
+        ctx.beginPath(); ctx.arc(MX+x-2, EY-2.5, 3, 0, Math.PI*2); ctx.fill();
+        // Small shine (lower-right)
+        ctx.beginPath(); ctx.arc(MX+x+2, EY+2, 1.5, 0, Math.PI*2); ctx.fill();
       }
-      if (e === 0) { // Classic — warm brown
-        EX.forEach(x => ghibliEye(x, "#8B6240"));
-      } else if (e === 1) { // Sparkle — amber
+      if (e === 0) { // Classic
+        EX.forEach(x => pkEye(x));
+      } else if (e === 1) { // Sparkle
         EX.forEach(x => {
-          ghibliEye(x, "#c08030");
-          ctx.fillStyle = "rgba(255,255,255,0.6)";
-          ctx.beginPath(); ctx.arc(MX+x+2.5, EY+2.5, 1.2, 0, Math.PI*2); ctx.fill();
-          ctx.beginPath(); ctx.arc(MX+x-3, EY+1, 0.8, 0, Math.PI*2); ctx.fill();
+          pkEye(x);
+          ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.arc(MX+x-3.5, EY-1, 1, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(MX+x+3, EY+0.5, 0.8, 0, Math.PI*2); ctx.fill();
         });
       } else if (e === 2) { // Sleepy
         EX.forEach(x => {
-          ctx.fillStyle = "#fff";
-          ctx.beginPath(); ctx.ellipse(MX+x, EY+2, R, R*0.5, 0, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = "#8B6240";
-          ctx.beginPath(); ctx.ellipse(MX+x, EY+3, R-2, R*0.3, 0, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = "#1a1008";
-          ctx.beginPath(); ctx.ellipse(MX+x, EY+3, R-4, R*0.2, 0, 0, Math.PI*2); ctx.fill();
-          ctx.strokeStyle = GH_OL; ctx.lineWidth = 2.5; ctx.lineCap = "round";
-          ctx.beginPath(); ctx.arc(MX+x, EY, R, Math.PI+0.4, -0.4); ctx.stroke();
+          ctx.strokeStyle = PK_OL; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.arc(MX+x, EY, R-1, 0.3, Math.PI-0.3); ctx.stroke();
         });
-      } else if (e === 3) { // Cat — green
+      } else if (e === 3) { // Cat
         EX.forEach(x => {
-          ctx.fillStyle = "#fff";
+          ctx.fillStyle = "#2a8a20";
           ctx.beginPath(); ctx.arc(MX+x, EY, R, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = "#6a9a38";
-          ctx.beginPath(); ctx.arc(MX+x, EY+0.5, R-1.5, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = "#1a1008";
-          ctx.beginPath(); ctx.ellipse(MX+x, EY+0.5, 1.8, R-2, 0, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = "rgba(255,255,255,0.8)";
-          ctx.beginPath(); ctx.arc(MX+x-1.5, EY-1.5, 1.8, 0, Math.PI*2); ctx.fill();
-          ol(() => { ctx.beginPath(); ctx.arc(MX+x, EY, R, 0, Math.PI*2); }, GH_OL, 1.5);
+          ctx.fillStyle = "#111";
+          ctx.beginPath(); ctx.ellipse(MX+x, EY, 2.5, R-1, 0, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.arc(MX+x-2, EY-2, 2.5, 0, Math.PI*2); ctx.fill();
+          ol(() => { ctx.beginPath(); ctx.arc(MX+x, EY, R, 0, Math.PI*2); }, PK_OL, 2);
         });
       } else if (e === 4) { // Heart
         EX.forEach(x => {
-          ctx.fillStyle = "#c85070";
-          const s = R * 0.85;
+          ctx.fillStyle = "#e83060";
+          const s = R * 0.9;
           ctx.beginPath(); ctx.arc(MX+x-s*0.4, EY-s*0.2, s*0.55, 0, Math.PI*2); ctx.fill();
           ctx.beginPath(); ctx.arc(MX+x+s*0.4, EY-s*0.2, s*0.55, 0, Math.PI*2); ctx.fill();
           ctx.beginPath(); ctx.moveTo(MX+x-s*0.9, EY+1); ctx.lineTo(MX+x, EY+s*1.1); ctx.lineTo(MX+x+s*0.9, EY+1); ctx.fill();
-          ctx.fillStyle = "rgba(255,255,255,0.35)";
-          ctx.beginPath(); ctx.arc(MX+x-2, EY-2, 1.5, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.arc(MX+x-2, EY-3, 2, 0, Math.PI*2); ctx.fill();
         });
       } else if (e === 5) { // Star
         EX.forEach(x => {
-          ctx.fillStyle = "#d4a020";
+          ctx.fillStyle = "#ffc020";
           ctx.beginPath();
           for (let i = 0; i < 5; i++) {
             const a = Math.PI*2*i/5 - Math.PI/2, a2 = a+Math.PI/5;
@@ -1616,44 +1605,44 @@
           ctx.beginPath(); ctx.arc(MX+x-2, EY-3, 2, 0, Math.PI*2); ctx.fill();
         });
       } else if (e === 6) { // Wink
-        ghibliEye(-11, "#8B6240");
-        ctx.strokeStyle = GH_OL; ctx.lineWidth = 2; ctx.lineCap = "round";
-        ctx.beginPath(); ctx.arc(MX+11, EY+1, R-1, 0.3, Math.PI-0.3); ctx.stroke();
+        pkEye(-12);
+        ctx.strokeStyle = PK_OL; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.arc(MX+12, EY+1, R-1, 0.3, Math.PI-0.3); ctx.stroke();
       } else if (e === 7) { // Closed (happy)
         EX.forEach(x => {
-          ctx.strokeStyle = GH_OL; ctx.lineWidth = 2; ctx.lineCap = "round";
+          ctx.strokeStyle = PK_OL; ctx.lineWidth = 2.5; ctx.lineCap = "round";
           ctx.beginPath(); ctx.arc(MX+x, EY+2, R-2, Math.PI+0.4, -0.4); ctx.stroke();
         });
-      } else if (e === 8) { // Dot (Totoro-style)
+      } else if (e === 8) { // Dot
         EX.forEach(x => {
-          ctx.fillStyle = "#2a1a0a";
-          ctx.beginPath(); ctx.arc(MX+x, EY, 3.5, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = "rgba(255,255,255,0.7)";
-          ctx.beginPath(); ctx.arc(MX+x+0.8, EY-1, 1, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = "#111";
+          ctx.beginPath(); ctx.arc(MX+x, EY, 4, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.arc(MX+x+1, EY-1, 1.5, 0, Math.PI*2); ctx.fill();
         });
       } else if (e === 9) { // Lashes
         EX.forEach((x, idx) => {
-          ghibliEye(x, "#7a5535");
+          pkEye(x);
           const s = idx === 0 ? -1 : 1;
-          ctx.strokeStyle = GH_OL; ctx.lineWidth = 1.5; ctx.lineCap = "round";
-          ctx.beginPath(); ctx.moveTo(MX+x+s*R, EY-3); ctx.lineTo(MX+x+s*(R+4), EY-6); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(MX+x+s*(R-1), EY); ctx.lineTo(MX+x+s*(R+3), EY-2); ctx.stroke();
+          ctx.strokeStyle = PK_OL; ctx.lineWidth = 2; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(MX+x+s*R, EY-3); ctx.lineTo(MX+x+s*(R+5), EY-7); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(MX+x+s*(R-1), EY); ctx.lineTo(MX+x+s*(R+4), EY-2); ctx.stroke();
         });
       } else if (e === 10) { // Angry
         EX.forEach((x, idx) => {
-          ghibliEye(x, "#9a4030");
+          pkEye(x);
           const s = idx === 0 ? 1 : -1;
-          ctx.strokeStyle = GH_OL; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+          ctx.strokeStyle = PK_OL; ctx.lineWidth = 3; ctx.lineCap = "round";
           ctx.beginPath(); ctx.moveTo(MX+x-R, EY-R-1-s*2); ctx.lineTo(MX+x+R, EY-R-1+s*2); ctx.stroke();
         });
       } else if (e === 11) { // Sad
         EX.forEach((x, idx) => {
-          ghibliEye(x, "#6080a0");
+          pkEye(x);
           const s = idx === 0 ? -1 : 1;
-          ctx.strokeStyle = GH_OL; ctx.lineWidth = 2; ctx.lineCap = "round";
+          ctx.strokeStyle = PK_OL; ctx.lineWidth = 2.5; ctx.lineCap = "round";
           ctx.beginPath(); ctx.moveTo(MX+x-R, EY-R+s*2); ctx.lineTo(MX+x+R, EY-R-s*2); ctx.stroke();
-          ctx.fillStyle = "rgba(120,180,220,0.35)";
-          ctx.beginPath(); ctx.ellipse(MX+x+s*2, EY+R+2, 1.5, 2.5, 0, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = "rgba(80,160,255,0.5)";
+          ctx.beginPath(); ctx.ellipse(MX+x+s*2, EY+R+3, 2, 3, 0, 0, Math.PI*2); ctx.fill();
         });
       }
     }
@@ -1664,7 +1653,7 @@
       const my = MY - 4;
       ctx.lineCap = "round"; ctx.lineJoin = "round";
       if (m === 0) { // Smile
-        ctx.strokeStyle = "#8a5545"; ctx.lineWidth = 2;
+        ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(MX, my, 5, 0.15, Math.PI-0.15); ctx.stroke();
       } else if (m === 1) { // Open
         ctx.fillStyle = "#b03050";
@@ -1674,14 +1663,14 @@
         ctx.fillStyle = "#fff";
         ctx.beginPath(); ctx.ellipse(MX, my-1, 4, 1.5, 0, 0, Math.PI*2); ctx.fill();
       } else if (m === 2) { // Cat (w)
-        ctx.strokeStyle = "#8a5545"; ctx.lineWidth = 2;
+        ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(MX-6, my); ctx.lineTo(MX-1, my+4); ctx.lineTo(MX, my+2);
         ctx.lineTo(MX+1, my+4); ctx.lineTo(MX+6, my); ctx.stroke();
       } else if (m === 3) { // Smirk
-        ctx.strokeStyle = "#8a5545"; ctx.lineWidth = 2;
+        ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(MX+3, my, 5, 0.4, Math.PI-0.6); ctx.stroke();
       } else if (m === 4) { // Tongue
-        ctx.strokeStyle = "#8a5545"; ctx.lineWidth = 2;
+        ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(MX, my, 5, 0.15, Math.PI-0.15); ctx.stroke();
         ctx.fillStyle = "#ff7088";
         ctx.beginPath(); ctx.ellipse(MX, my+5, 4, 5, 0, 0, Math.PI*2); ctx.fill();
@@ -1699,16 +1688,16 @@
         ctx.fillStyle = "#fff";
         ctx.beginPath(); ctx.moveTo(MX-7, my); ctx.lineTo(MX+7, my); ctx.lineTo(MX+5, my+3); ctx.lineTo(MX-5, my+3); ctx.fill();
       } else if (m === 7) { // Pout
-        ctx.strokeStyle = "#8a5545"; ctx.lineWidth = 2;
+        ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(MX, my+4, 4, Math.PI+0.3, -0.3); ctx.stroke();
       } else if (m === 8) { // Fangs
-        ctx.strokeStyle = "#8a5545"; ctx.lineWidth = 2;
+        ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(MX, my, 5, 0.15, Math.PI-0.15); ctx.stroke();
         ctx.fillStyle = "#fff";
         ctx.beginPath(); ctx.moveTo(MX-4, my+1); ctx.lineTo(MX-2.5, my+6); ctx.lineTo(MX-1, my+1); ctx.fill();
         ctx.beginPath(); ctx.moveTo(MX+1, my+1); ctx.lineTo(MX+2.5, my+6); ctx.lineTo(MX+4, my+1); ctx.fill();
       } else if (m === 9) { // Blep
-        ctx.strokeStyle = "#8a5545"; ctx.lineWidth = 2;
+        ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(MX-5, my+1); ctx.lineTo(MX+5, my+1); ctx.stroke();
         ctx.fillStyle = "#ff7088";
         ctx.beginPath(); ctx.ellipse(MX+4, my+4, 3, 4, 0.2, 0, Math.PI*2); ctx.fill();
@@ -1778,55 +1767,50 @@
       }
     }
 
-    // Smooth gradient fill for Ghibli-style shading
-    function gradBody(cx, cy, rx, ry, baseColor, shadeColor) {
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.scale(1, ry / rx);
-      const grd = ctx.createRadialGradient(-rx * 0.25, -rx * 0.3, rx * 0.1, 0, 0, rx);
-      grd.addColorStop(0, baseColor);
-      grd.addColorStop(0.7, baseColor);
-      grd.addColorStop(1, shadeColor);
-      ctx.fillStyle = grd;
-      ctx.beginPath(); ctx.arc(0, 0, rx, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
-    }
-
     function drawMouse() {
       const fur = furColors[sel.fur];
       const bg = backgrounds[sel.bg];
-      const bodyShade = shade(fur.body, 22);
-      const bellyShade = shade(fur.belly, 15);
+      const bodyShade = shade(fur.body, 30);
+      const bellyShade = shade(fur.belly, 20);
+      const innerShade = shade(fur.inner, 20);
 
       // Background
       if (bg.drawBg) bg.drawBg(ctx);
       else { ctx.fillStyle = "#87CEEB"; ctx.fillRect(0, 0, CW, CH); }
 
-      // Tail — smooth curvy with warm outline
-      ctx.strokeStyle = fur.inner; ctx.lineWidth = 4; ctx.lineCap = "round";
+      // Tail — solid color, thick black outline
+      ctx.strokeStyle = fur.inner; ctx.lineWidth = 5; ctx.lineCap = "round";
       ctx.beginPath(); ctx.moveTo(MX+2, MY+42);
       ctx.bezierCurveTo(MX+35, MY+58, MX+48, MY+28, MX+58, MY+48); ctx.stroke();
       ol(() => { ctx.beginPath(); ctx.moveTo(MX+2, MY+42);
-        ctx.bezierCurveTo(MX+35, MY+58, MX+48, MY+28, MX+58, MY+48); }, GH_OL, 1);
+        ctx.bezierCurveTo(MX+35, MY+58, MX+48, MY+28, MX+58, MY+48); }, PK_OL, 1.5);
 
-      // Back outfit (cape draws behind body)
+      // Back outfit
       if (sel.outfit > 0 && outfits[sel.outfit].name === "Cape") {
         outfits[sel.outfit].draw(ctx, MX, MY, fur, true);
       }
 
-      // Body — smooth gradient shading
-      gradBody(MX, MY+25, 30, 35, fur.body, bodyShade);
-      ol(() => { ctx.beginPath(); ctx.ellipse(MX, MY+25, 30, 35, 0, 0, Math.PI*2); }, GH_OL, 1.8);
+      // Body — FLAT color + hard-edge shadow on bottom-right
+      ctx.fillStyle = fur.body;
+      ctx.beginPath(); ctx.ellipse(MX, MY+25, 30, 35, 0, 0, Math.PI*2); ctx.fill();
+      // Hard shadow — clip to body shape, fill bottom half darker
+      ctx.save();
+      ctx.beginPath(); ctx.ellipse(MX, MY+25, 30, 35, 0, 0, Math.PI*2); ctx.clip();
+      ctx.fillStyle = bodyShade;
+      ctx.beginPath(); ctx.ellipse(MX+8, MY+38, 28, 28, 0, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+      ol(() => { ctx.beginPath(); ctx.ellipse(MX, MY+25, 30, 35, 0, 0, Math.PI*2); }, PK_OL, 2.5);
 
-      // Belly — soft gradient
-      gradBody(MX, MY+30, 18, 22, fur.belly, bellyShade);
+      // Belly — flat
+      ctx.fillStyle = fur.belly;
+      ctx.beginPath(); ctx.ellipse(MX, MY+30, 18, 22, 0, 0, Math.PI*2); ctx.fill();
 
-      // Outfit (front)
+      // Outfit
       if (sel.outfit > 0 && outfits[sel.outfit].name !== "Cape") {
         outfits[sel.outfit].draw(ctx, MX, MY, fur);
       }
 
-      // Arms — smoother, rounder
+      // Arms — flat color, bold outline
       [[-1],[1]].forEach(([s]) => {
         ctx.fillStyle = fur.body;
         ctx.beginPath();
@@ -1840,48 +1824,56 @@
           ctx.quadraticCurveTo(MX+s*36, MY+22, MX+s*28, MY+36);
           ctx.quadraticCurveTo(MX+s*22, MY+38, MX+s*22, MY+28);
           ctx.quadraticCurveTo(MX+s*23, MY+16, MX+s*28, MY+10);
-        }, GH_OL, 1.5);
+        }, PK_OL, 2);
       });
-      // Paws — rounder
+      // Paws — flat
       ctx.fillStyle = fur.inner;
       ctx.beginPath(); ctx.arc(MX-26, MY+36, 5, 0, Math.PI*2); ctx.fill();
+      ol(() => { ctx.beginPath(); ctx.arc(MX-26, MY+36, 5, 0, Math.PI*2); }, PK_OL, 1.5);
       ctx.beginPath(); ctx.arc(MX+26, MY+36, 5, 0, Math.PI*2); ctx.fill();
+      ol(() => { ctx.beginPath(); ctx.arc(MX+26, MY+36, 5, 0, Math.PI*2); }, PK_OL, 1.5);
 
-      // Head — bigger, rounder, smooth gradient shading
-      gradBody(MX, MY-16, 34, 32, fur.body, bodyShade);
-      ol(() => { ctx.beginPath(); ctx.ellipse(MX, MY-16, 34, 32, 0, 0, Math.PI*2); }, GH_OL, 2);
+      // Head — flat color + hard shadow, thick outline, BIG and round
+      ctx.fillStyle = fur.body;
+      ctx.beginPath(); ctx.arc(MX, MY-16, 34, 0, Math.PI*2); ctx.fill();
+      // Hard shadow on head — bottom-right
+      ctx.save();
+      ctx.beginPath(); ctx.arc(MX, MY-16, 34, 0, Math.PI*2); ctx.clip();
+      ctx.fillStyle = bodyShade;
+      ctx.beginPath(); ctx.ellipse(MX+10, MY, 30, 24, 0, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+      ol(() => { ctx.beginPath(); ctx.arc(MX, MY-16, 34, 0, Math.PI*2); }, PK_OL, 2.5);
 
-      // Ears (selected style)
+      // Ears
       drawEars(fur);
 
-      // Eyes (selected style)
+      // Eyes
       drawEyes();
 
-      // Nose — cute pink triangle-ish
-      ctx.fillStyle = "#e8889a";
-      ctx.beginPath(); ctx.ellipse(MX, MY-4, 3.5, 2.5, 0, 0, Math.PI*2); ctx.fill();
-      // Nose highlight
-      ctx.fillStyle = "rgba(255,255,255,0.3)";
-      ctx.beginPath(); ctx.arc(MX-1, MY-5, 1.2, 0, Math.PI*2); ctx.fill();
+      // Nose — tiny black triangle (Pokemon style)
+      ctx.fillStyle = "#222";
+      ctx.beginPath();
+      ctx.moveTo(MX-3, MY-4); ctx.lineTo(MX+3, MY-4); ctx.lineTo(MX, MY-1); ctx.closePath();
+      ctx.fill();
 
-      // Whiskers — delicate, warm
-      ctx.strokeStyle = "rgba(72,48,32,0.18)"; ctx.lineWidth = 0.8; ctx.lineCap = "round";
+      // Whiskers — black, clean
+      ctx.strokeStyle = PK_OL; ctx.lineWidth = 1; ctx.lineCap = "round";
       [[-1,-1.5],[-1,0.5],[-1,2.5],[1,-1.5],[1,0.5],[1,2.5]].forEach(([dx,dy]) => {
-        ctx.beginPath(); ctx.moveTo(MX+dx*5, MY-2); ctx.lineTo(MX+dx*28, MY-2+dy*3); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(MX+dx*5, MY-1); ctx.lineTo(MX+dx*28, MY-1+dy*3); ctx.stroke();
       });
 
-      // Mouth (selected style)
+      // Mouth
       drawMouth();
 
-      // Cheeks (selected style)
+      // Cheeks
       drawCheeks(fur);
 
-      // Feet — round, cute
+      // Feet — flat, outlined
       ctx.fillStyle = fur.inner;
       ctx.beginPath(); ctx.ellipse(MX-13, MY+57, 10, 5, -0.1, 0, Math.PI*2); ctx.fill();
-      ol(() => { ctx.beginPath(); ctx.ellipse(MX-13, MY+57, 10, 5, -0.1, 0, Math.PI*2); }, GH_OL, 1);
+      ol(() => { ctx.beginPath(); ctx.ellipse(MX-13, MY+57, 10, 5, -0.1, 0, Math.PI*2); }, PK_OL, 2);
       ctx.beginPath(); ctx.ellipse(MX+13, MY+57, 10, 5, 0.1, 0, Math.PI*2); ctx.fill();
-      ol(() => { ctx.beginPath(); ctx.ellipse(MX+13, MY+57, 10, 5, 0.1, 0, Math.PI*2); }, GH_OL, 1);
+      ol(() => { ctx.beginPath(); ctx.ellipse(MX+13, MY+57, 10, 5, 0.1, 0, Math.PI*2); }, PK_OL, 2);
 
       // Hat
       if (sel.hat > 0) hats[sel.hat].draw(ctx, MX, MY, fur);
