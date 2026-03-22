@@ -221,6 +221,7 @@
             <button class="arcade-tab" data-game="peggle">🎯 Mouse Peggle</button>
             <button class="arcade-tab" data-game="doodle">🐭 Mouse Jump</button>
             <button class="arcade-tab" data-game="picross">🧩 Picross</button>
+            <button class="arcade-tab" data-game="stack">🧱 Cheese Stack</button>
           </div>
           <div class="arcade-content">
             <div class="game-panel active" id="game-maze">
@@ -313,6 +314,15 @@
                 <button id="picross-mark" class="btn-game picross-mode-btn">Mark ✕</button>
                 <button id="picross-reset" class="btn-game">Reset</button>
               </div>
+            </div>
+            <div class="game-panel" id="game-stack">
+              <p class="game-desc">Stack cheese blocks as high as you can! Click or press Space to drop. 🧀🧱</p>
+              <div class="stack-header">
+                <span>🧀 Score: <strong id="stack-score">0</strong></span>
+                <span>🏆 Best: <strong id="stack-best">0</strong></span>
+              </div>
+              <canvas id="stack-canvas" width="300" height="400"></canvas>
+              <button id="stack-start" class="btn-game">Start Stacking! 🧱</button>
             </div>
           </div>
         </div>

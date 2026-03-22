@@ -44,6 +44,7 @@
     initPeggle();
     initDoodleJump();
     initPicross();
+    initCheeseStack();
     initGallery();
     initQuiz();
     initObservatory();
@@ -5050,6 +5051,283 @@
     resetBtn.addEventListener("click", () => { initPuzzle(); playPop(); });
 
     initPuzzle();
+  }
+
+  // ========== CHEESE STACK ==========
+  function initCheeseStack() {
+    const canvas = $("#stack-canvas");
+    const scoreEl = $("#stack-score");
+    const bestEl = $("#stack-best");
+    const startBtn = $("#stack-start");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+    const BH = 18; // block height
+    const BASE_W = 160;
+    const PERFECT_THRESH = 3;
+    const BASE_SPEED = 1.8;
+    const SPEED_INC = 0.12;
+
+    let blocks, cur, score, bestScore, gameOver, started, running;
+    let perfectCount, particles, perfTexts, camY, camTarget;
+
+    bestScore = parseInt(localStorage.getItem("stackBest") || "0");
+    if (bestEl) bestEl.textContent = bestScore;
+
+    function reset() {
+      blocks = [{ x: (W - BASE_W) / 2, y: H - BH - 20, w: BASE_W }];
+      cur = { x: 0, w: BASE_W, dir: 1, speed: BASE_SPEED };
+      score = 0; gameOver = false; started = false; running = false;
+      perfectCount = 0; particles = []; perfTexts = [];
+      camY = 0; camTarget = 0;
+      if (scoreEl) scoreEl.textContent = 0;
+      draw();
+    }
+
+    function spawnParticles(x, y, w, color, count) {
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: x + Math.random() * w, y: y + Math.random() * BH,
+          vx: (Math.random() - 0.5) * 4, vy: -Math.random() * 3 - 1,
+          life: 1, color, r: 2 + Math.random() * 2
+        });
+      }
+    }
+
+    function dropBlock() {
+      if (gameOver) { reset(); return; }
+      if (!started) { started = true; running = true; update(); return; }
+      const last = blocks[blocks.length - 1];
+      const overStart = Math.max(cur.x, last.x);
+      const overEnd = Math.min(cur.x + cur.w, last.x + last.w);
+      const overW = overEnd - overStart;
+
+      if (overW <= 0) {
+        // Miss — game over
+        spawnParticles(cur.x, last.y - BH, cur.w, "#ffc83d", 12);
+        gameOver = true;
+        if (score > bestScore) { bestScore = score; localStorage.setItem("stackBest", bestScore); if (bestEl) bestEl.textContent = bestScore; }
+        playPop();
+        return;
+      }
+
+      const newY = last.y - BH;
+
+      if (Math.abs(overW - cur.w) < PERFECT_THRESH) {
+        // Perfect!
+        blocks.push({ x: last.x, y: newY, w: last.w });
+        perfectCount++;
+        perfTexts.push({ text: perfectCount > 1 ? `Perfect x${perfectCount}!` : "Perfect!", x: W / 2, y: newY - camY, life: 1 });
+        spawnParticles(last.x, newY, last.w, "#fff", 8);
+        playCelebration();
+        score += 2;
+      } else {
+        // Partial — slice off overhang
+        const cutX = cur.x < last.x ? cur.x : overEnd;
+        const cutW = cur.w - overW;
+        spawnParticles(cutX, newY, cutW, "#e8a317", 6);
+        blocks.push({ x: overStart, y: newY, w: overW });
+        perfectCount = 0;
+        playSqueak();
+        score++;
+      }
+
+      if (scoreEl) scoreEl.textContent = score;
+
+      // Next block
+      const topBlock = blocks[blocks.length - 1];
+      cur = { x: 0, w: topBlock.w, dir: 1, speed: BASE_SPEED + blocks.length * SPEED_INC };
+
+      // Camera
+      const towerH = (blocks.length) * BH;
+      if (towerH > H * 0.45) {
+        camTarget = towerH - H * 0.45;
+      }
+    }
+
+    function drawCheeseBlock(x, y, w, h, alt) {
+      const col = alt ? "#f5b820" : "#ffc83d";
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.roundRect(x, y, w, h, 3); ctx.fill();
+      ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(x, y, w, h, 3); ctx.stroke();
+      // Cheese holes
+      if (w > 20) {
+        ctx.fillStyle = alt ? "#d4950a" : "#e8a317";
+        const holeCount = Math.max(1, Math.floor(w / 40));
+        for (let i = 0; i < holeCount; i++) {
+          const hx = x + 10 + (i * (w - 20) / Math.max(1, holeCount - 1));
+          ctx.beginPath(); ctx.arc(hx, y + h / 2, 3, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+    }
+
+    function drawMiniMouse(mx, my) {
+      const bob = Math.sin(Date.now() / 300) * 2;
+      my += bob;
+      // Body
+      ctx.fillStyle = "#9e9e9e";
+      ctx.beginPath(); ctx.ellipse(mx, my - 4, 8, 10, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.ellipse(mx, my - 4, 8, 10, 0, 0, Math.PI * 2); ctx.stroke();
+      // Belly
+      ctx.fillStyle = "#d5d5d5";
+      ctx.beginPath(); ctx.ellipse(mx, my - 2, 5, 6, 0, 0, Math.PI * 2); ctx.fill();
+      // Head
+      ctx.fillStyle = "#9e9e9e";
+      ctx.beginPath(); ctx.arc(mx, my - 15, 9, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(mx, my - 15, 9, 0, Math.PI * 2); ctx.stroke();
+      // Ears
+      ctx.fillStyle = "#9e9e9e";
+      ctx.beginPath(); ctx.arc(mx - 7, my - 22, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(mx + 7, my - 22, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#f0c0c0";
+      ctx.beginPath(); ctx.arc(mx - 7, my - 22, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(mx + 7, my - 22, 3, 0, Math.PI * 2); ctx.fill();
+      // Eyes
+      ctx.fillStyle = "#111";
+      ctx.beginPath(); ctx.arc(mx - 3, my - 16, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(mx + 3, my - 16, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(mx - 2.5, my - 17, 0.8, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(mx + 3.5, my - 17, 0.8, 0, Math.PI * 2); ctx.fill();
+      // Nose
+      ctx.fillStyle = "#ff8faa";
+      ctx.beginPath(); ctx.arc(mx, my - 13, 1.5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function draw() {
+      // Sky
+      const sky = ctx.createLinearGradient(0, 0, 0, H);
+      sky.addColorStop(0, "#87CEEB"); sky.addColorStop(1, "#e8f0e0");
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+
+      // Ground
+      ctx.fillStyle = "#4a8c3f";
+      ctx.fillRect(0, H - 20, W, 20);
+      ctx.fillStyle = "#3d7a34";
+      for (let i = 0; i < W; i += 6) {
+        ctx.beginPath(); ctx.moveTo(i, H - 20); ctx.lineTo(i + 3, H - 26); ctx.lineTo(i + 6, H - 20); ctx.fill();
+      }
+
+      ctx.save();
+      ctx.translate(0, camY);
+
+      // Stacked blocks
+      blocks.forEach((b, i) => drawCheeseBlock(b.x, b.y, b.w, BH, i % 2 === 1));
+
+      // Current swinging block
+      if (started && !gameOver) {
+        const topY = blocks[blocks.length - 1].y - BH;
+        drawCheeseBlock(cur.x, topY, cur.w, BH, blocks.length % 2 === 1);
+      }
+
+      // Mouse on top
+      if (blocks.length > 0) {
+        const top = blocks[blocks.length - 1];
+        drawMiniMouse(top.x + top.w / 2, top.y - 2);
+      }
+
+      ctx.restore();
+
+      // Particles (not camera-affected for floating feel)
+      particles.forEach(p => {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y + camY, p.r, 0, Math.PI * 2); ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+
+      // Perfect texts
+      perfTexts.forEach(t => {
+        ctx.globalAlpha = t.life;
+        ctx.fillStyle = "#ff6600";
+        ctx.font = `bold ${14 + (1 - t.life) * 8}px 'Nunito', sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText(t.text, t.x, t.y);
+      });
+      ctx.globalAlpha = 1;
+
+      // Pre-start message
+      if (!started && !gameOver) {
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
+        ctx.font = "bold 16px 'Nunito', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Click or Space to start!", W / 2, H / 2 - 40);
+      }
+
+      // Game over overlay
+      if (gameOver) {
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 28px 'Nunito', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Game Over!", W / 2, H / 2 - 30);
+        ctx.font = "bold 18px 'Nunito', sans-serif";
+        ctx.fillStyle = "#ffc83d";
+        ctx.fillText(`Score: ${score}`, W / 2, H / 2 + 5);
+        ctx.fillStyle = "#fff";
+        ctx.font = "14px 'Nunito', sans-serif";
+        ctx.fillText(`Best: ${bestScore}`, W / 2, H / 2 + 30);
+        if (score >= bestScore && score > 0) {
+          ctx.fillStyle = "#ff6600";
+          ctx.fillText("New Best! 🎉", W / 2, H / 2 + 55);
+        }
+        ctx.fillStyle = "rgba(255,255,255,0.6)";
+        ctx.fillText("Click or Space to retry", W / 2, H / 2 + 80);
+      }
+    }
+
+    function update() {
+      if (!running) return;
+
+      // Move current block
+      if (started && !gameOver) {
+        cur.x += cur.dir * cur.speed;
+        if (cur.x <= 0) { cur.x = 0; cur.dir = 1; }
+        if (cur.x + cur.w >= W) { cur.x = W - cur.w; cur.dir = -1; }
+      }
+
+      // Camera lerp
+      camY += (camTarget - camY) * 0.06;
+
+      // Update particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.life -= 0.025;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      // Update perfect texts
+      for (let i = perfTexts.length - 1; i >= 0; i--) {
+        perfTexts[i].y -= 0.8;
+        perfTexts[i].life -= 0.015;
+        if (perfTexts[i].life <= 0) perfTexts.splice(i, 1);
+      }
+
+      draw();
+      requestAnimationFrame(update);
+    }
+
+    // Input
+    canvas.addEventListener("click", dropBlock);
+    canvas.addEventListener("touchstart", (e) => { e.preventDefault(); dropBlock(); }, { passive: false });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === " " && $("#game-stack") && $("#game-stack").classList.contains("active")) {
+        e.preventDefault();
+        dropBlock();
+      }
+    });
+
+    if (startBtn) startBtn.addEventListener("click", () => {
+      if (gameOver) reset();
+      if (!started) { started = true; running = true; update(); }
+    });
+
+    reset();
   }
 
 })();
