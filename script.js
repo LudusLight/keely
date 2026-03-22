@@ -3538,8 +3538,8 @@
       if (gameOver || !started) return;
 
       // Horizontal input
-      if (keysDown["ArrowLeft"] || keysDown["a"]) player.vx = -3.2;
-      else if (keysDown["ArrowRight"] || keysDown["d"]) player.vx = 3.2;
+      if (keysDown["ArrowLeft"] || keysDown["a"]) player.vx = -2.5;
+      else if (keysDown["ArrowRight"] || keysDown["d"]) player.vx = 2.5;
       else player.vx *= 0.85;
       player.x += player.vx;
 
@@ -3548,7 +3548,7 @@
       if (player.x > W) player.x = -player.w;
 
       // Gravity
-      player.vy += 0.22;
+      player.vy += 0.15;
       player.y += player.vy;
 
       // Invincibility timer
@@ -3591,7 +3591,7 @@
             if (p.type === "disappearing" && !p.touched) {
               p.touched = true;
             }
-            player.vy = p.type === "spring" ? -15 : -9.5;
+            player.vy = p.type === "spring" ? -11 : -7;
             playSqueak();
           }
         });
@@ -3623,7 +3623,7 @@
           if (psy + player.h > esy + 4 && psy < esy + e.h) {
             if (player.vy > 0 && psy + player.h - esy < 14) {
               e.alive = false;
-              player.vy = -9.5;
+              player.vy = -7;
               player.invincible = 30;
               score += 100;
               scoreEl.textContent = score;
@@ -3699,7 +3699,7 @@
     function startGame() {
       init();
       started = true;
-      player.vy = -9.5;
+      player.vy = -7;
       requestAnimationFrame(update);
     }
 
