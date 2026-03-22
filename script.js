@@ -1507,6 +1507,7 @@
         earPair((s) => {
           ctx.fillStyle = fur.body;
           ctx.beginPath(); ctx.ellipse(MX+s*18, MY-42, 9, 11, s*0.3, 0, Math.PI*2); ctx.fill();
+          ol(() => { ctx.beginPath(); ctx.ellipse(MX+s*18, MY-42, 9, 11, s*0.3, 0, Math.PI*2); }, OL);
           ctx.fillStyle = fur.inner;
           ctx.beginPath(); ctx.ellipse(MX+s*18, MY-42, 5, 7, s*0.3, 0, Math.PI*2); ctx.fill();
         });
@@ -1517,13 +1518,12 @@
           ol(() => { ctx.beginPath(); ctx.ellipse(MX+s*28, MY-50, 22, 28, s*0.2, 0, Math.PI*2); }, OL);
           ctx.fillStyle = fur.inner;
           ctx.beginPath(); ctx.ellipse(MX+s*28, MY-50, 16, 20, s*0.2, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = shade(fur.inner, 15);
-          ctx.beginPath(); ctx.ellipse(MX+s*28+s*3, MY-47, 8, 12, s*0.2, 0, Math.PI*2); ctx.fill();
         });
       } else if (e === 5) { // Tufted
         earPair((s) => {
           ctx.fillStyle = fur.body;
           ctx.beginPath(); ctx.ellipse(MX+s*24, MY-48, 16, 20, s*0.3, 0, Math.PI*2); ctx.fill();
+          ol(() => { ctx.beginPath(); ctx.ellipse(MX+s*24, MY-48, 16, 20, s*0.3, 0, Math.PI*2); }, OL);
           ctx.fillStyle = fur.inner;
           ctx.beginPath(); ctx.ellipse(MX+s*24, MY-48, 11, 14, s*0.3, 0, Math.PI*2); ctx.fill();
           ctx.fillStyle = fur.belly;
@@ -1535,6 +1535,7 @@
         earPair((s) => {
           ctx.fillStyle = fur.body;
           ctx.beginPath(); ctx.ellipse(MX+s*22, MY-38, 18, 15, s*0.5, 0, Math.PI*2); ctx.fill();
+          ol(() => { ctx.beginPath(); ctx.ellipse(MX+s*22, MY-38, 18, 15, s*0.5, 0, Math.PI*2); }, OL);
           ctx.fillStyle = fur.inner;
           ctx.beginPath(); ctx.ellipse(MX+s*22, MY-38, 12, 10, s*0.5, 0, Math.PI*2); ctx.fill();
           ctx.strokeStyle = OL; ctx.lineWidth = 1.5;
@@ -1546,6 +1547,9 @@
           ctx.beginPath(); ctx.arc(MX+s*24, MY-50, 15, 0, Math.PI*2); ctx.fill();
           ctx.beginPath(); ctx.arc(MX+s*18, MY-58, 9, 0, Math.PI*2); ctx.fill();
           ctx.beginPath(); ctx.arc(MX+s*30, MY-56, 8, 0, Math.PI*2); ctx.fill();
+          ol(() => { ctx.beginPath(); ctx.arc(MX+s*24, MY-50, 15, 0, Math.PI*2); }, OL);
+          ol(() => { ctx.beginPath(); ctx.arc(MX+s*18, MY-58, 9, 0, Math.PI*2); }, OL);
+          ol(() => { ctx.beginPath(); ctx.arc(MX+s*30, MY-56, 8, 0, Math.PI*2); }, OL);
           ctx.fillStyle = fur.inner;
           ctx.beginPath(); ctx.arc(MX+s*24, MY-50, 9, 0, Math.PI*2); ctx.fill();
         });
