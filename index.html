@@ -220,6 +220,7 @@
             <button class="arcade-tab" data-game="match3">💎 Cheese Match</button>
             <button class="arcade-tab" data-game="peggle">🎯 Mouse Peggle</button>
             <button class="arcade-tab" data-game="doodle">🐭 Mouse Jump</button>
+            <button class="arcade-tab" data-game="picross">🧩 Picross</button>
           </div>
           <div class="arcade-content">
             <div class="game-panel active" id="game-maze">
@@ -309,10 +310,23 @@
               <button id="peggle-new" class="btn-game">New Game 🎯</button>
             </div>
             <div class="game-panel" id="game-doodle">
-              <p class="game-desc">Jump as high as you can! Avoid the cats! 🐭⬆️</p>
-              <div class="doodle-header"><span>Score: <strong id="doodle-score">0</strong></span><span>Best: <strong id="doodle-best">0</strong></span></div>
-              <canvas id="doodle-canvas" width="300" height="400"></canvas>
+              <p class="game-desc">Jump as high as you can! Collect cheese, avoid cats! 🐭🧀</p>
+              <div class="doodle-header"><span>Score: <strong id="doodle-score">0</strong></span><span>🧀 <strong id="doodle-cheese">0</strong></span><span>Best: <strong id="doodle-best">0</strong></span></div>
+              <canvas id="doodle-canvas" width="300" height="450"></canvas>
               <button id="doodle-start" class="btn-game">Start Game! 🐭</button>
+            </div>
+            <div class="game-panel" id="game-picross">
+              <p class="game-desc">Solve pixel puzzles using number clues! 🧩🐭</p>
+              <div class="picross-header">
+                <select id="picross-puzzle-select"></select>
+                <span id="picross-status"></span>
+              </div>
+              <canvas id="picross-canvas" width="400" height="400"></canvas>
+              <div class="picross-controls">
+                <button id="picross-fill" class="btn-game picross-mode-btn active">Fill ■</button>
+                <button id="picross-mark" class="btn-game picross-mode-btn">Mark ✕</button>
+                <button id="picross-reset" class="btn-game">Reset</button>
+              </div>
             </div>
           </div>
         </div>

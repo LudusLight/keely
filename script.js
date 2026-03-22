@@ -43,6 +43,7 @@
     initMatch3();
     initPeggle();
     initDoodleJump();
+    initPicross();
     initGallery();
     initQuiz();
     initContactForm();
@@ -583,14 +584,15 @@
     const newBtn = $("#maze-new");
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    const SIZE = 10;
-    const CELL = 30;
-    let grid, playerX, playerY;
+    const SIZE = 15;
+    const CELL = 20;
+    let grid, playerX, playerY, moves, trail;
 
     function generate() {
       grid = Array.from({ length: SIZE }, () =>
         Array.from({ length: SIZE }, () => ({ top: true, right: true, bottom: true, left: true, visited: false }))
       );
+      // Recursive backtracker for base maze
       const stack = [[0, 0]];
       grid[0][0].visited = true;
       const dirs = [[0, -1, "top", "bottom"], [1, 0, "right", "left"], [0, 1, "bottom", "top"], [-1, 0, "left", "right"]];
@@ -605,13 +607,36 @@
         grid[ny][nx].visited = true;
         stack.push([nx, ny]);
       }
-      playerX = 0; playerY = 0;
+      // Remove extra walls to create multiple paths and loops
+      const extraRemovals = Math.floor(SIZE * SIZE * 0.12);
+      for (let i = 0; i < extraRemovals; i++) {
+        const x = Math.floor(Math.random() * SIZE);
+        const y = Math.floor(Math.random() * SIZE);
+        const d = dirs[Math.floor(Math.random() * 4)];
+        const nx = x + d[0], ny = y + d[1];
+        if (nx >= 0 && ny >= 0 && nx < SIZE && ny < SIZE) {
+          grid[y][x][d[2]] = false;
+          grid[ny][nx][d[3]] = false;
+        }
+      }
+      playerX = 0; playerY = 0; moves = 0;
+      trail = new Set();
+      trail.add("0,0");
       draw();
     }
 
     function draw() {
       ctx.fillStyle = "#fdf6e3";
       ctx.fillRect(0, 0, 300, 300);
+
+      // Draw trail
+      trail.forEach(key => {
+        const [tx, ty] = key.split(",").map(Number);
+        ctx.fillStyle = "rgba(255,200,61,0.2)";
+        ctx.fillRect(tx * CELL + 1, ty * CELL + 1, CELL - 2, CELL - 2);
+      });
+
+      // Draw walls
       ctx.strokeStyle = "#3d2c1e";
       ctx.lineWidth = 2;
       for (let y = 0; y < SIZE; y++) {
@@ -624,28 +649,64 @@
           if (cell.left) { ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, py + CELL); ctx.stroke(); }
         }
       }
-      ctx.font = "20px serif";
-      ctx.fillText("🧀", (SIZE - 1) * CELL + 5, (SIZE - 1) * CELL + 22);
-      ctx.font = "18px serif";
-      ctx.fillText("🐭", playerX * CELL + 6, playerY * CELL + 21);
+
+      // Cheese (bottom-right)
+      ctx.globalAlpha = 1;
+      ctx.font = (CELL - 4) + "px serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("🧀", (SIZE - 1) * CELL + CELL / 2, (SIZE - 1) * CELL + CELL / 2);
+
+      // Player
+      ctx.fillText("🐭", playerX * CELL + CELL / 2, playerY * CELL + CELL / 2);
+
+      // Move counter
+      ctx.fillStyle = "rgba(61,44,30,0.5)";
+      ctx.font = "10px sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText("Moves: " + moves, 296, 12);
+      ctx.textAlign = "left";
     }
 
     document.addEventListener("keydown", e => {
       if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) return;
-      // Only handle if maze is visible
       const mazePanel = $("#game-maze");
       if (!mazePanel || !mazePanel.classList.contains("active")) return;
       e.preventDefault();
       const cell = grid[playerY][playerX];
-      if (e.key === "ArrowUp" && !cell.top) playerY--;
-      if (e.key === "ArrowDown" && !cell.bottom) playerY++;
-      if (e.key === "ArrowLeft" && !cell.left) playerX--;
-      if (e.key === "ArrowRight" && !cell.right) playerX++;
+      let moved = false;
+      if (e.key === "ArrowUp" && !cell.top) { playerY--; moved = true; }
+      if (e.key === "ArrowDown" && !cell.bottom) { playerY++; moved = true; }
+      if (e.key === "ArrowLeft" && !cell.left) { playerX--; moved = true; }
+      if (e.key === "ArrowRight" && !cell.right) { playerX++; moved = true; }
+      if (moved) {
+        moves++;
+        trail.add(playerX + "," + playerY);
+      }
       draw();
+      // Check cheese
       if (playerX === SIZE - 1 && playerY === SIZE - 1) {
         playCelebration();
-        setTimeout(() => { alert("🧀 You found the cheese! 🐭"); generate(); }, 100);
+        setTimeout(() => { alert("🧀 You found the cheese in " + moves + " moves! 🐭"); generate(); }, 100);
       }
+    });
+
+    // Touch controls for maze
+    let mazeTouch = null;
+    canvas.addEventListener("touchstart", e => {
+      e.preventDefault();
+      mazeTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }, { passive: false });
+    canvas.addEventListener("touchend", e => {
+      if (!mazeTouch) return;
+      const dx = e.changedTouches[0].clientX - mazeTouch.x;
+      const dy = e.changedTouches[0].clientY - mazeTouch.y;
+      mazeTouch = null;
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      let key;
+      if (Math.abs(dx) > Math.abs(dy)) key = dx > 0 ? "ArrowRight" : "ArrowLeft";
+      else key = dy > 0 ? "ArrowDown" : "ArrowUp";
+      document.dispatchEvent(new KeyboardEvent("keydown", { key }));
     });
 
     newBtn.addEventListener("click", () => { generate(); playSqueak(); });
@@ -3136,32 +3197,33 @@
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     const scoreEl = $("#doodle-score");
+    const cheeseEl = $("#doodle-cheese");
     const bestEl = $("#doodle-best");
     const startBtn = $("#doodle-start");
 
     const W = canvas.width, H = canvas.height;
-    let player, platforms, enemies, score, bestScore, gameOver, started, cameraY;
+    let player, platforms, enemies, cheeses, particles, score, cheeseCount, bestScore, gameOver, started, cameraY;
     let keysDown = {};
 
     bestScore = parseInt(localStorage.getItem("doodleBest") || "0");
     if (bestEl) bestEl.textContent = bestScore;
 
     function init() {
-      player = { x: W / 2 - 10, y: H - 60, w: 20, h: 24, vy: 0, vx: 0, dir: 1 };
+      player = { x: W / 2 - 12, y: H - 60, w: 24, h: 28, vy: 0, vx: 0, dir: 1, invincible: 0 };
       platforms = [];
       enemies = [];
-      score = 0; gameOver = false; started = false; cameraY = 0;
+      cheeses = [];
+      particles = [];
+      score = 0; cheeseCount = 0; gameOver = false; started = false; cameraY = 0;
       scoreEl.textContent = 0;
+      if (cheeseEl) cheeseEl.textContent = 0;
 
-      // Generate initial platforms
-      for (let i = 0; i < 8; i++) {
-        platforms.push(makePlatform(H - 50 - i * 55));
+      for (let i = 0; i < 10; i++) {
+        platforms.push(makePlatform(H - 50 - i * 50));
       }
-      // Ensure a platform under the player
-      platforms[0].x = W / 2 - 25;
+      platforms[0].x = W / 2 - 28;
       platforms[0].y = H - 30;
       platforms[0].type = "normal";
-
       draw();
     }
 
@@ -3169,130 +3231,224 @@
       const x = Math.random() * (W - 60);
       const r = Math.random();
       let type = "normal";
-      if (score > 500 && r < 0.08) type = "breaking";
-      else if (score > 300 && r < 0.15) type = "moving";
-      else if (r < 0.05) type = "spring";
-      return { x, y, w: 55, h: 10, type, moveDir: Math.random() < 0.5 ? 1 : -1, broken: false };
+      if (score > 800 && r < 0.06) type = "disappearing";
+      else if (score > 500 && r < 0.12) type = "breaking";
+      else if (score > 200 && r < 0.2) type = "moving";
+      else if (r < 0.06) type = "spring";
+      return { x, y, w: 56, h: 12, type, moveDir: (Math.random() < 0.5 ? 1 : -1), moveSpeed: 1 + Math.random() * 1.5, broken: false, touched: false, disappearTimer: 0 };
     }
 
     function makeEnemy(y) {
+      const types = ["tabby", "black", "calico"];
+      const t = types[Math.floor(Math.random() * types.length)];
+      const fast = score > 1000;
       return {
-        x: Math.random() * (W - 30),
-        y,
-        w: 24, h: 24,
-        type: Math.random() < 0.5 ? "cat" : "bird",
-        vx: (Math.random() < 0.5 ? 1 : -1) * (1 + Math.random()),
+        x: Math.random() * (W - 30), y, w: 28, h: 28,
+        type: t,
+        vx: (Math.random() < 0.5 ? 1 : -1) * (1.2 + Math.random() * (fast ? 2 : 1)),
+        sinOffset: Math.random() * Math.PI * 2,
+        baseY: y,
         alive: true
       };
     }
 
-    function drawMouse(x, y, dir) {
-      ctx.fillStyle = "#9e9e9e";
+    function makeCheese(y) {
+      return { x: Math.random() * (W - 16), y, w: 16, h: 16, collected: false };
+    }
+
+    function spawnParticles(x, y, color, count) {
+      for (let i = 0; i < count; i++) {
+        particles.push({ x, y, vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4 - 2, life: 30 + Math.random() * 20, color, r: 2 + Math.random() * 3 });
+      }
+    }
+
+    // --- DRAWING ---
+    function drawMouse(x, y) {
+      const bounce = Math.sin(Date.now() / 100) * (player.vy < 0 ? 2 : 0);
+      const sy = y + bounce;
+      // Shadow
+      ctx.fillStyle = "rgba(0,0,0,0.1)";
+      ctx.beginPath(); ctx.ellipse(x + 12, sy + 28, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
       // Body
-      ctx.beginPath(); ctx.ellipse(x + 10, y + 14, 10, 12, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = player.invincible > 0 ? (Math.floor(Date.now() / 80) % 2 ? "#ffd700" : "#9e9e9e") : "#9e9e9e";
+      ctx.beginPath(); ctx.ellipse(x + 12, sy + 16, 11, 13, 0, 0, Math.PI * 2); ctx.fill();
+      // Belly
+      ctx.fillStyle = "#d4d0cc";
+      ctx.beginPath(); ctx.ellipse(x + 12, sy + 19, 7, 8, 0, 0, Math.PI * 2); ctx.fill();
       // Ears
-      ctx.beginPath(); ctx.arc(x + 4, y + 2, 5, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(x + 16, y + 2, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#9e9e9e";
+      ctx.beginPath(); ctx.arc(x + 4, sy + 4, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + 20, sy + 4, 6, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = "#f0c0c0";
-      ctx.beginPath(); ctx.arc(x + 4, y + 2, 3, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(x + 16, y + 2, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + 4, sy + 4, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + 20, sy + 4, 4, 0, Math.PI * 2); ctx.fill();
       // Eyes
       ctx.fillStyle = "#222";
-      ctx.beginPath(); ctx.arc(x + 7, y + 10, 2, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(x + 13, y + 10, 2, 0, Math.PI * 2); ctx.fill();
+      const eyeDir = player.vx > 0.5 ? 1 : player.vx < -0.5 ? -1 : 0;
+      ctx.beginPath(); ctx.arc(x + 8 + eyeDir, sy + 11, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + 16 + eyeDir, sy + 11, 2.5, 0, Math.PI * 2); ctx.fill();
+      // Eye shine
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(x + 7 + eyeDir, sy + 10, 1, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + 15 + eyeDir, sy + 10, 1, 0, Math.PI * 2); ctx.fill();
       // Nose
       ctx.fillStyle = "#ff8faa";
-      ctx.beginPath(); ctx.arc(x + 10, y + 14, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + 12, sy + 15, 2, 0, Math.PI * 2); ctx.fill();
+      // Whiskers
+      ctx.strokeStyle = "rgba(0,0,0,0.2)"; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(x + 5, sy + 14); ctx.lineTo(x - 3, sy + 12); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + 5, sy + 16); ctx.lineTo(x - 3, sy + 17); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + 19, sy + 14); ctx.lineTo(x + 27, sy + 12); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + 19, sy + 16); ctx.lineTo(x + 27, sy + 17); ctx.stroke();
       // Feet
       ctx.fillStyle = "#f0c0c0";
-      ctx.beginPath(); ctx.ellipse(x + 5, y + 24, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(x + 15, y + 24, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(x + 6, sy + 27, 4, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(x + 18, sy + 27, 4, 2.5, 0, 0, Math.PI * 2); ctx.fill();
     }
 
-    function drawPlatformShape(p, screenY) {
+    function drawPlatformShape(p, sy) {
       if (p.broken) return;
+      const r = 5;
       if (p.type === "normal") {
         ctx.fillStyle = "#27ae60";
-        ctx.fillRect(p.x, screenY, p.w, p.h);
+        ctx.beginPath(); ctx.roundRect(p.x, sy, p.w, p.h, r); ctx.fill();
         ctx.fillStyle = "#2ecc71";
-        ctx.fillRect(p.x + 2, screenY + 2, p.w - 4, p.h - 4);
+        ctx.beginPath(); ctx.roundRect(p.x + 2, sy + 2, p.w - 4, p.h - 5, r - 1); ctx.fill();
+        // Grass tufts
+        ctx.fillStyle = "#1e8a4e";
+        for (let i = 0; i < 3; i++) {
+          const gx = p.x + 8 + i * 16;
+          ctx.beginPath(); ctx.moveTo(gx, sy); ctx.lineTo(gx + 3, sy - 5); ctx.lineTo(gx + 6, sy); ctx.fill();
+        }
       } else if (p.type === "moving") {
         ctx.fillStyle = "#2196f3";
-        ctx.fillRect(p.x, screenY, p.w, p.h);
+        ctx.beginPath(); ctx.roundRect(p.x, sy, p.w, p.h, r); ctx.fill();
         ctx.fillStyle = "#64b5f6";
-        ctx.fillRect(p.x + 2, screenY + 2, p.w - 4, p.h - 4);
+        ctx.beginPath(); ctx.roundRect(p.x + 2, sy + 2, p.w - 4, p.h - 5, r - 1); ctx.fill();
+        // Arrows
+        ctx.fillStyle = "rgba(255,255,255,0.5)"; ctx.font = "8px sans-serif"; ctx.textAlign = "center";
+        ctx.fillText(p.moveDir > 0 ? "→" : "←", p.x + p.w / 2, sy + 9);
       } else if (p.type === "breaking") {
         ctx.fillStyle = "#8B4513";
-        ctx.fillRect(p.x, screenY, p.w, p.h);
-        // Cracks
-        ctx.strokeStyle = "#3e2723"; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(p.x + 10, screenY); ctx.lineTo(p.x + 20, screenY + p.h); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(p.x + 35, screenY); ctx.lineTo(p.x + 30, screenY + p.h); ctx.stroke();
+        ctx.beginPath(); ctx.roundRect(p.x, sy, p.w, p.h, r); ctx.fill();
+        ctx.strokeStyle = "#5d2e0e"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(p.x + 10, sy + 1); ctx.lineTo(p.x + 18, sy + p.h - 1); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(p.x + 30, sy + 1); ctx.lineTo(p.x + 38, sy + p.h - 1); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(p.x + 45, sy + 3); ctx.lineTo(p.x + 42, sy + p.h); ctx.stroke();
       } else if (p.type === "spring") {
         ctx.fillStyle = "#27ae60";
-        ctx.fillRect(p.x, screenY, p.w, p.h);
+        ctx.beginPath(); ctx.roundRect(p.x, sy, p.w, p.h, r); ctx.fill();
         ctx.fillStyle = "#2ecc71";
-        ctx.fillRect(p.x + 2, screenY + 2, p.w - 4, p.h - 4);
-        // Spring coil
+        ctx.beginPath(); ctx.roundRect(p.x + 2, sy + 2, p.w - 4, p.h - 5, r - 1); ctx.fill();
+        // Spring coil on top
         ctx.fillStyle = "#e74c3c";
-        ctx.fillRect(p.x + 22, screenY - 8, 10, 8);
-        ctx.strokeStyle = "#c0392b"; ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(p.x + 24, screenY - 2);
-        ctx.lineTo(p.x + 30, screenY - 6);
-        ctx.lineTo(p.x + 24, screenY - 4);
-        ctx.stroke();
+        ctx.beginPath(); ctx.roundRect(p.x + p.w / 2 - 6, sy - 10, 12, 10, 3); ctx.fill();
+        ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5;
+        for (let i = 0; i < 3; i++) {
+          const cx = p.x + p.w / 2 - 4 + i * 4;
+          ctx.beginPath(); ctx.moveTo(cx, sy - 8); ctx.lineTo(cx + 2, sy - 3); ctx.stroke();
+        }
+      } else if (p.type === "disappearing") {
+        const alpha = p.touched ? Math.max(0, 1 - p.disappearTimer / 40) : 0.7;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = "#9c27b0";
+        ctx.beginPath(); ctx.roundRect(p.x, sy, p.w, p.h, r); ctx.fill();
+        ctx.fillStyle = "#ba68c8";
+        ctx.beginPath(); ctx.roundRect(p.x + 2, sy + 2, p.w - 4, p.h - 5, r - 1); ctx.fill();
+        ctx.globalAlpha = 1;
       }
     }
 
-    function drawEnemy(e, screenY) {
-      if (!e.alive) return;
-      if (e.type === "cat") {
-        // Cat face
-        ctx.fillStyle = "#ff9800";
-        ctx.beginPath(); ctx.arc(e.x + 12, e.y - cameraY + 12, 12, 0, Math.PI * 2); ctx.fill();
-        // Ears
-        ctx.beginPath(); ctx.moveTo(e.x + 2, e.y - cameraY + 2); ctx.lineTo(e.x - 2, e.y - cameraY - 8); ctx.lineTo(e.x + 8, e.y - cameraY); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(e.x + 22, e.y - cameraY + 2); ctx.lineTo(e.x + 26, e.y - cameraY - 8); ctx.lineTo(e.x + 16, e.y - cameraY); ctx.fill();
-        // Eyes
-        ctx.fillStyle = "#222";
-        ctx.beginPath(); ctx.arc(e.x + 8, e.y - cameraY + 10, 2, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(e.x + 16, e.y - cameraY + 10, 2, 0, Math.PI * 2); ctx.fill();
-        // Nose
-        ctx.fillStyle = "#e91e63";
-        ctx.beginPath(); ctx.arc(e.x + 12, e.y - cameraY + 14, 1.5, 0, Math.PI * 2); ctx.fill();
-      } else {
-        // Bird
-        ctx.fillStyle = "#e74c3c";
-        ctx.beginPath(); ctx.ellipse(e.x + 12, e.y - cameraY + 12, 12, 8, 0, 0, Math.PI * 2); ctx.fill();
-        // Wing
-        ctx.fillStyle = "#c0392b";
-        ctx.beginPath(); ctx.ellipse(e.x + 5, e.y - cameraY + 8, 8, 4, -0.3, 0, Math.PI * 2); ctx.fill();
-        // Eye
-        ctx.fillStyle = "#fff";
-        ctx.beginPath(); ctx.arc(e.x + 16, e.y - cameraY + 10, 3, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#222";
-        ctx.beginPath(); ctx.arc(e.x + 17, e.y - cameraY + 10, 1.5, 0, Math.PI * 2); ctx.fill();
-        // Beak
-        ctx.fillStyle = "#ff9800";
-        ctx.beginPath(); ctx.moveTo(e.x + 22, e.y - cameraY + 11); ctx.lineTo(e.x + 28, e.y - cameraY + 13); ctx.lineTo(e.x + 22, e.y - cameraY + 15); ctx.fill();
+    function drawCat(e) {
+      const sy = e.y - cameraY;
+      const bob = Math.sin(Date.now() / 300 + e.sinOffset) * 3;
+      const colors = { tabby: ["#ff9800", "#e65100"], black: ["#424242", "#212121"], calico: ["#ff9800", "#fff"] };
+      const c = colors[e.type] || colors.tabby;
+      const facing = e.vx > 0 ? 1 : -1;
+      // Shadow
+      ctx.fillStyle = "rgba(0,0,0,0.1)";
+      ctx.beginPath(); ctx.ellipse(e.x + 14, sy + 28, 12, 3, 0, 0, Math.PI * 2); ctx.fill();
+      // Body
+      ctx.fillStyle = c[0];
+      ctx.beginPath(); ctx.ellipse(e.x + 14, sy + 16 + bob, 13, 12, 0, 0, Math.PI * 2); ctx.fill();
+      // Calico patches
+      if (e.type === "calico") {
+        ctx.fillStyle = "#333";
+        ctx.beginPath(); ctx.arc(e.x + 8, sy + 12 + bob, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(e.x + 20, sy + 18 + bob, 4, 0, Math.PI * 2); ctx.fill();
       }
+      // Ears
+      ctx.fillStyle = c[0];
+      ctx.beginPath(); ctx.moveTo(e.x + 4, sy + 6 + bob); ctx.lineTo(e.x - 1, sy - 5 + bob); ctx.lineTo(e.x + 10, sy + 4 + bob); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(e.x + 24, sy + 6 + bob); ctx.lineTo(e.x + 29, sy - 5 + bob); ctx.lineTo(e.x + 18, sy + 4 + bob); ctx.fill();
+      // Inner ears
+      ctx.fillStyle = "#f0c0c0";
+      ctx.beginPath(); ctx.moveTo(e.x + 5, sy + 5 + bob); ctx.lineTo(e.x + 1, sy - 2 + bob); ctx.lineTo(e.x + 9, sy + 4 + bob); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(e.x + 23, sy + 5 + bob); ctx.lineTo(e.x + 27, sy - 2 + bob); ctx.lineTo(e.x + 19, sy + 4 + bob); ctx.fill();
+      // Eyes — menacing slits
+      ctx.fillStyle = "#76ff03";
+      ctx.beginPath(); ctx.arc(e.x + 8, sy + 12 + bob, 3.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(e.x + 20, sy + 12 + bob, 3.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#111";
+      ctx.fillRect(e.x + 7, sy + 9.5 + bob, 2, 5);
+      ctx.fillRect(e.x + 19, sy + 9.5 + bob, 2, 5);
+      // Nose
+      ctx.fillStyle = "#e91e63";
+      ctx.beginPath(); ctx.moveTo(e.x + 14, sy + 16 + bob); ctx.lineTo(e.x + 12, sy + 14.5 + bob); ctx.lineTo(e.x + 16, sy + 14.5 + bob); ctx.fill();
+      // Mouth
+      ctx.strokeStyle = "#e91e63"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(e.x + 14, sy + 16 + bob); ctx.lineTo(e.x + 11, sy + 18 + bob); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(e.x + 14, sy + 16 + bob); ctx.lineTo(e.x + 17, sy + 18 + bob); ctx.stroke();
+      // Tail
+      ctx.strokeStyle = c[0]; ctx.lineWidth = 3; ctx.lineCap = "round";
+      const tailX = facing > 0 ? e.x - 2 : e.x + 30;
+      const wave = Math.sin(Date.now() / 200 + e.sinOffset) * 6;
+      ctx.beginPath();
+      ctx.moveTo(tailX, sy + 20 + bob);
+      ctx.quadraticCurveTo(tailX + wave * facing, sy + 10 + bob, tailX + wave * 1.5 * facing, sy + 5 + bob);
+      ctx.stroke();
+      ctx.lineCap = "butt";
+    }
+
+    function drawCheese(c) {
+      if (c.collected) return;
+      const sy = c.y - cameraY;
+      const glow = Math.sin(Date.now() / 200) * 0.15 + 0.85;
+      ctx.globalAlpha = glow;
+      // Cheese wedge
+      ctx.fillStyle = "#ffc83d";
+      ctx.beginPath(); ctx.moveTo(c.x, sy + 14); ctx.lineTo(c.x + 8, sy); ctx.lineTo(c.x + 16, sy + 14); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#e8a317";
+      ctx.beginPath(); ctx.moveTo(c.x, sy + 14); ctx.lineTo(c.x + 16, sy + 14); ctx.lineTo(c.x + 16, sy + 16); ctx.lineTo(c.x, sy + 16); ctx.closePath(); ctx.fill();
+      // Holes
+      ctx.fillStyle = "#e8a317";
+      ctx.beginPath(); ctx.arc(c.x + 6, sy + 9, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(c.x + 12, sy + 12, 1.5, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
     }
 
     function draw() {
-      // Background — notebook paper style
+      // Background — notebook paper
       ctx.fillStyle = "#f5f0e8";
       ctx.fillRect(0, 0, W, H);
-      // Grid lines
-      ctx.strokeStyle = "rgba(180,200,220,0.3)";
+      ctx.strokeStyle = "rgba(180,200,220,0.25)";
       ctx.lineWidth = 1;
-      for (let y = 0; y < H; y += 20) {
+      const gridOffset = (cameraY * 0.3) % 20;
+      for (let y = -20 + gridOffset; y < H + 20; y += 20) {
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
       }
-      // Left margin
-      ctx.strokeStyle = "rgba(255,100,100,0.3)";
+      ctx.strokeStyle = "rgba(255,100,100,0.25)";
       ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(30, 0); ctx.lineTo(30, H); ctx.stroke();
+
+      // Height markers
+      ctx.fillStyle = "rgba(61,44,30,0.15)"; ctx.font = "10px sans-serif"; ctx.textAlign = "right";
+      for (let h = 0; h < score + 200; h += 100) {
+        const markerY = -h * 10 - cameraY;
+        if (markerY > -10 && markerY < H) {
+          ctx.fillText(h + "m", 26, markerY + 3);
+        }
+      }
 
       // Platforms
       platforms.forEach(p => {
@@ -3300,34 +3456,59 @@
         if (sy > -20 && sy < H + 20) drawPlatformShape(p, sy);
       });
 
+      // Cheeses
+      cheeses.forEach(c => {
+        const sy = c.y - cameraY;
+        if (sy > -20 && sy < H + 20) drawCheese(c);
+      });
+
       // Enemies
-      enemies.forEach(e => drawEnemy(e, e.y - cameraY));
+      enemies.forEach(e => {
+        if (!e.alive) return;
+        const sy = e.y - cameraY;
+        if (sy > -30 && sy < H + 30) drawCat(e);
+      });
+
+      // Particles
+      particles.forEach(p => {
+        ctx.globalAlpha = p.life / 50;
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+      });
 
       // Player
       if (!gameOver) {
-        drawMouse(player.x, player.y - cameraY, player.dir);
+        drawMouse(player.x, player.y - cameraY);
       }
 
-      // Score display on canvas
+      // HUD on canvas
       ctx.fillStyle = "rgba(61,44,30,0.7)";
-      ctx.font = "bold 14px sans-serif";
+      ctx.font = "bold 13px sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText("Score: " + score, 40, 20);
+      ctx.fillText("Score: " + score, 36, 20);
+      ctx.fillText("🧀 " + cheeseCount, 36, 38);
 
-      // Game over
+      // Game over overlay
       if (gameOver) {
-        ctx.fillStyle = "rgba(0,0,0,0.6)";
+        ctx.fillStyle = "rgba(0,0,0,0.65)";
         ctx.fillRect(0, 0, W, H);
         ctx.fillStyle = "#ffd700";
-        ctx.font = "bold 24px sans-serif";
+        ctx.font = "bold 28px sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("Game Over!", W / 2, H / 2 - 20);
+        ctx.fillText("Game Over!", W / 2, H / 2 - 40);
         ctx.font = "16px sans-serif";
-        ctx.fillText("Score: " + score, W / 2, H / 2 + 10);
+        ctx.fillStyle = "#fff";
+        ctx.fillText("Score: " + score, W / 2, H / 2 - 10);
+        ctx.fillText("🧀 Cheese: " + cheeseCount, W / 2, H / 2 + 15);
         if (score >= bestScore) {
           ctx.fillStyle = "#ff69b4";
-          ctx.fillText("New Best!", W / 2, H / 2 + 35);
+          ctx.font = "bold 18px sans-serif";
+          ctx.fillText("✨ New Best! ✨", W / 2, H / 2 + 45);
         }
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.font = "13px sans-serif";
+        ctx.fillText("Tap or press any key to retry", W / 2, H / 2 + 75);
       }
     }
 
@@ -3335,10 +3516,9 @@
       if (gameOver || !started) return;
 
       // Horizontal input
-      if (keysDown["ArrowLeft"] || keysDown["a"]) player.vx = -3.5;
-      else if (keysDown["ArrowRight"] || keysDown["d"]) player.vx = 3.5;
-      else player.vx *= 0.8;
-
+      if (keysDown["ArrowLeft"] || keysDown["a"]) player.vx = -3.2;
+      else if (keysDown["ArrowRight"] || keysDown["d"]) player.vx = 3.2;
+      else player.vx *= 0.85;
       player.x += player.vx;
 
       // Screen wrapping
@@ -3346,22 +3526,30 @@
       if (player.x > W) player.x = -player.w;
 
       // Gravity
-      player.vy += 0.2;
+      player.vy += 0.22;
       player.y += player.vy;
+
+      // Invincibility timer
+      if (player.invincible > 0) player.invincible--;
 
       // Move moving platforms
       platforms.forEach(p => {
         if (p.type === "moving") {
-          p.x += p.moveDir * 1.5;
+          p.x += p.moveDir * p.moveSpeed;
           if (p.x < 0 || p.x + p.w > W) p.moveDir *= -1;
+        }
+        if (p.type === "disappearing" && p.touched) {
+          p.disappearTimer++;
+          if (p.disappearTimer > 40) p.broken = true;
         }
       });
 
-      // Move enemies
+      // Move enemies — patrol + sine bob
       enemies.forEach(e => {
         if (!e.alive) return;
         e.x += e.vx;
-        if (e.x < 0 || e.x + e.w > W) e.vx *= -1;
+        if (e.x < -5 || e.x + e.w > W + 5) e.vx *= -1;
+        e.y = e.baseY + Math.sin(Date.now() / 500 + e.sinOffset) * 15;
       });
 
       // Platform collision (only when falling)
@@ -3370,35 +3558,58 @@
           if (p.broken) return;
           const py = player.y + player.h;
           const prevPy = py - player.vy;
-          if (player.x + player.w > p.x && player.x < p.x + p.w &&
-              py >= p.y && prevPy <= p.y) {
+          if (player.x + player.w > p.x + 4 && player.x < p.x + p.w - 4 &&
+              py >= p.y && prevPy <= p.y + 4) {
             if (p.type === "breaking") {
               p.broken = true;
+              spawnParticles(p.x + p.w / 2, p.y - cameraY, "#8B4513", 6);
               playPop();
               return;
             }
-            player.vy = p.type === "spring" ? -13 : -7.5;
+            if (p.type === "disappearing" && !p.touched) {
+              p.touched = true;
+            }
+            player.vy = p.type === "spring" ? -15 : -9.5;
             playSqueak();
           }
         });
       }
 
+      // Cheese collection
+      cheeses.forEach(c => {
+        if (c.collected) return;
+        const dx = (player.x + player.w / 2) - (c.x + c.w / 2);
+        const dy = (player.y + player.h / 2) - (c.y + c.h / 2);
+        if (Math.abs(dx) < 18 && Math.abs(dy) < 18) {
+          c.collected = true;
+          cheeseCount++;
+          score += 25;
+          if (cheeseEl) cheeseEl.textContent = cheeseCount;
+          scoreEl.textContent = score;
+          spawnParticles(c.x + 8, c.y - cameraY + 8, "#ffc83d", 8);
+          playPop();
+        }
+      });
+
       // Enemy collision
       enemies.forEach(e => {
         if (!e.alive) return;
-        const ey = e.y - cameraY;
-        // Check if player hits enemy
-        if (player.x + player.w > e.x && player.x < e.x + e.w) {
-          const playerScreenY = player.y - cameraY;
-          if (playerScreenY + player.h > ey && playerScreenY < ey + e.h) {
-            // Landing on top?
-            if (player.vy > 0 && playerScreenY + player.h - ey < 10) {
+        if (player.invincible > 0) return;
+        if (player.x + player.w > e.x + 3 && player.x < e.x + e.w - 3) {
+          const psy = player.y;
+          const esy = e.y;
+          if (psy + player.h > esy + 4 && psy < esy + e.h) {
+            if (player.vy > 0 && psy + player.h - esy < 14) {
               e.alive = false;
-              player.vy = -7.5;
+              player.vy = -9.5;
+              player.invincible = 30;
+              score += 100;
+              scoreEl.textContent = score;
+              spawnParticles(e.x + 14, e.y - cameraY + 14, "#ff9800", 10);
               playPop();
-              score += 50;
             } else {
               gameOver = true;
+              spawnParticles(player.x + 12, player.y - cameraY + 14, "#ff0000", 12);
               playPop();
               if (score > bestScore) {
                 bestScore = score;
@@ -3413,7 +3624,7 @@
       // Camera follows player upward
       const targetCam = player.y - H * 0.4;
       if (targetCam < cameraY) {
-        cameraY = targetCam;
+        cameraY += (targetCam - cameraY) * 0.15;
       }
 
       // Update score based on height
@@ -3423,21 +3634,30 @@
         scoreEl.textContent = score;
       }
 
-      // Generate new platforms and enemies above
-      const topY = cameraY;
+      // Generate new platforms, enemies, and cheeses above
       const highestPlatY = Math.min(...platforms.map(p => p.y));
-      if (highestPlatY > topY - 100) {
-        const gap = 40 + Math.min(score / 5, 40);
-        platforms.push(makePlatform(highestPlatY - gap));
-        // Occasionally spawn enemies
-        if (score > 200 && Math.random() < 0.08) {
-          enemies.push(makeEnemy(highestPlatY - gap - 40));
+      if (highestPlatY > cameraY - 150) {
+        const gap = 38 + Math.min(score / 8, 50);
+        const newY = highestPlatY - gap;
+        platforms.push(makePlatform(newY));
+        // Enemies ramp up with score
+        if (score > 150 && Math.random() < Math.min(0.12, 0.04 + score / 5000)) {
+          enemies.push(makeEnemy(newY - 50));
+        }
+        // Cheese spawns
+        if (Math.random() < 0.2) {
+          cheeses.push(makeCheese(newY - 20 - Math.random() * 30));
         }
       }
 
-      // Remove platforms and enemies far below
+      // Cleanup off-screen
       platforms = platforms.filter(p => p.y - cameraY < H + 100);
       enemies = enemies.filter(e => e.y - cameraY < H + 100);
+      cheeses = cheeses.filter(c => c.y - cameraY < H + 100);
+
+      // Update particles
+      particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.1; p.life--; });
+      particles = particles.filter(p => p.life > 0);
 
       // Fall below screen = game over
       if (player.y - cameraY > H + 50) {
@@ -3457,31 +3677,33 @@
     function startGame() {
       init();
       started = true;
-      player.vy = -10; // Initial jump
+      player.vy = -9.5;
       requestAnimationFrame(update);
     }
 
     document.addEventListener("keydown", e => {
       keysDown[e.key] = true;
-      if ((e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "a" || e.key === "d") && !started && !gameOver) {
+      if (gameOver && started) { startGame(); return; }
+      if (!started && (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "a" || e.key === "d")) {
         startGame();
       }
     });
     document.addEventListener("keyup", e => { keysDown[e.key] = false; });
 
-    // Touch controls
+    // Touch controls — tilt style
     let touchStartX = null;
     canvas.addEventListener("touchstart", e => {
       e.preventDefault();
       touchStartX = e.touches[0].clientX;
-      if (!started || gameOver) startGame();
+      if (gameOver && started) { startGame(); return; }
+      if (!started) startGame();
     }, { passive: false });
     canvas.addEventListener("touchmove", e => {
       e.preventDefault();
       if (touchStartX === null) return;
       const dx = e.touches[0].clientX - touchStartX;
-      if (dx < -15) { keysDown["ArrowLeft"] = true; keysDown["ArrowRight"] = false; }
-      else if (dx > 15) { keysDown["ArrowRight"] = true; keysDown["ArrowLeft"] = false; }
+      if (dx < -10) { keysDown["ArrowLeft"] = true; keysDown["ArrowRight"] = false; }
+      else if (dx > 10) { keysDown["ArrowRight"] = true; keysDown["ArrowLeft"] = false; }
       else { keysDown["ArrowLeft"] = false; keysDown["ArrowRight"] = false; }
     }, { passive: false });
     canvas.addEventListener("touchend", () => {
@@ -3490,8 +3712,313 @@
       keysDown["ArrowRight"] = false;
     });
 
-    startBtn.addEventListener("click", () => startGame());
+    startBtn.addEventListener("click", () => {
+      if (gameOver && started) startGame();
+      else if (!started) startGame();
+    });
     init();
+  }
+
+  // ========== PICROSS (NONOGRAM) ==========
+  function initPicross() {
+    const canvas = $("#picross-canvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const select = $("#picross-puzzle-select");
+    const statusEl = $("#picross-status");
+    const fillBtn = $("#picross-fill");
+    const markBtn = $("#picross-mark");
+    const resetBtn = $("#picross-reset");
+
+    const PUZZLES = [
+      { name: "Mouse", size: 5, grid: [[0,1,0,0,0],[1,1,1,0,0],[0,1,1,1,0],[0,0,1,1,1],[0,0,0,0,1]] },
+      { name: "Cheese", size: 5, grid: [[1,1,1,1,1],[1,0,1,1,0],[0,1,1,1,0],[0,0,1,1,0],[0,0,0,1,0]] },
+      { name: "Cat", size: 5, grid: [[1,0,0,0,1],[1,1,1,1,1],[1,0,1,0,1],[1,1,0,1,1],[0,1,1,1,0]] },
+      { name: "Heart", size: 5, grid: [[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]] },
+      { name: "Mouse Face", size: 10, grid: [
+        [0,1,1,0,0,0,0,1,1,0],[1,1,1,1,0,0,1,1,1,1],[0,1,1,0,0,0,0,1,1,0],[0,0,0,1,1,1,1,0,0,0],
+        [0,0,1,1,0,0,1,1,0,0],[0,1,1,1,1,1,1,1,1,0],[0,1,0,1,0,0,1,0,1,0],[1,0,0,0,1,1,0,0,0,1],
+        [0,0,0,1,1,1,1,0,0,0],[0,0,0,0,1,1,0,0,0,0]
+      ]},
+      { name: "Cat Face", size: 10, grid: [
+        [1,0,0,0,0,0,0,0,0,1],[1,1,0,0,0,0,0,0,1,1],[1,1,1,0,0,0,0,1,1,1],[1,1,1,1,1,1,1,1,1,1],
+        [1,1,0,1,0,0,1,0,1,1],[1,1,0,0,0,0,0,0,1,1],[1,0,0,0,0,1,0,0,0,1],[1,0,1,0,0,0,0,1,0,1],
+        [0,1,1,0,1,1,0,1,1,0],[0,0,1,1,1,1,1,1,0,0]
+      ]},
+      { name: "Cheese Wedge", size: 10, grid: [
+        [1,1,1,1,1,1,1,1,1,0],[1,1,0,1,1,1,0,1,1,0],[1,1,1,1,1,1,1,1,0,0],[0,1,1,0,1,1,1,1,0,0],
+        [0,1,1,1,1,0,1,0,0,0],[0,0,1,1,1,1,1,0,0,0],[0,0,1,0,1,1,0,0,0,0],[0,0,0,1,1,1,0,0,0,0],
+        [0,0,0,0,1,1,0,0,0,0],[0,0,0,0,0,1,0,0,0,0]
+      ]},
+      { name: "Paw Print", size: 10, grid: [
+        [0,0,1,0,0,0,0,1,0,0],[0,1,1,0,0,0,0,1,1,0],[0,0,1,0,0,0,0,1,0,0],[0,0,0,1,0,0,1,0,0,0],
+        [0,0,0,1,1,1,1,0,0,0],[0,0,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,0],
+        [0,0,1,1,1,1,1,1,0,0],[0,0,0,1,1,1,1,0,0,0]
+      ]}
+    ];
+
+    let currentPuzzle = 0;
+    let playerGrid; // 0=unknown, 1=filled, 2=marked-X
+    let mode = "fill"; // "fill" or "mark"
+    let solved = false;
+    let cellSize, offsetX, offsetY, clueSpaceX, clueSpaceY;
+
+    // Populate puzzle selector
+    PUZZLES.forEach((p, i) => {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = (p.size + "x" + p.size) + " " + p.name;
+      select.appendChild(opt);
+    });
+
+    function getClues(grid) {
+      const size = grid.length;
+      const rowClues = [];
+      const colClues = [];
+      for (let r = 0; r < size; r++) {
+        const groups = [];
+        let count = 0;
+        for (let c = 0; c < size; c++) {
+          if (grid[r][c]) count++;
+          else if (count > 0) { groups.push(count); count = 0; }
+        }
+        if (count > 0) groups.push(count);
+        rowClues.push(groups.length ? groups : [0]);
+      }
+      for (let c = 0; c < size; c++) {
+        const groups = [];
+        let count = 0;
+        for (let r = 0; r < size; r++) {
+          if (grid[r][c]) count++;
+          else if (count > 0) { groups.push(count); count = 0; }
+        }
+        if (count > 0) groups.push(count);
+        colClues.push(groups.length ? groups : [0]);
+      }
+      return { rowClues, colClues };
+    }
+
+    function initPuzzle() {
+      const p = PUZZLES[currentPuzzle];
+      const size = p.size;
+      playerGrid = Array.from({ length: size }, () => Array(size).fill(0));
+      solved = false;
+      statusEl.textContent = "";
+
+      const { rowClues, colClues } = getClues(p.grid);
+      const maxRowClue = Math.max(...rowClues.map(c => c.length));
+      const maxColClue = Math.max(...colClues.map(c => c.length));
+
+      clueSpaceX = maxRowClue * 16 + 8;
+      clueSpaceY = maxColClue * 14 + 8;
+      const available = Math.min(canvas.width - clueSpaceX - 4, canvas.height - clueSpaceY - 4);
+      cellSize = Math.floor(available / size);
+      offsetX = clueSpaceX;
+      offsetY = clueSpaceY;
+
+      draw();
+    }
+
+    function draw() {
+      const p = PUZZLES[currentPuzzle];
+      const size = p.size;
+      const { rowClues, colClues } = getClues(p.grid);
+
+      ctx.fillStyle = "#fdf6e3";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw column clues
+      ctx.fillStyle = "#3d2c1e";
+      ctx.font = "bold 11px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      for (let c = 0; c < size; c++) {
+        const clue = colClues[c];
+        const cx = offsetX + c * cellSize + cellSize / 2;
+        for (let i = 0; i < clue.length; i++) {
+          const cy = offsetY - (clue.length - i) * 14;
+          // Grey out completed clues
+          const colFilled = [];
+          let cnt = 0;
+          for (let r = 0; r < size; r++) {
+            if (playerGrid[r][c] === 1) cnt++;
+            else if (cnt > 0) { colFilled.push(cnt); cnt = 0; }
+          }
+          if (cnt > 0) colFilled.push(cnt);
+          ctx.fillStyle = JSON.stringify(colFilled) === JSON.stringify(clue) ? "rgba(61,44,30,0.3)" : "#3d2c1e";
+          ctx.fillText(clue[i], cx, cy + 14);
+        }
+      }
+
+      // Draw row clues
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      for (let r = 0; r < size; r++) {
+        const clue = rowClues[r];
+        const cy = offsetY + r * cellSize + cellSize / 2;
+        // Check if row is complete
+        const rowFilled = [];
+        let cnt = 0;
+        for (let c = 0; c < size; c++) {
+          if (playerGrid[r][c] === 1) cnt++;
+          else if (cnt > 0) { rowFilled.push(cnt); cnt = 0; }
+        }
+        if (cnt > 0) rowFilled.push(cnt);
+        const rowDone = JSON.stringify(rowFilled) === JSON.stringify(clue);
+        for (let i = 0; i < clue.length; i++) {
+          const cx = offsetX - (clue.length - i) * 16 - 4;
+          ctx.fillStyle = rowDone ? "rgba(61,44,30,0.3)" : "#3d2c1e";
+          ctx.fillText(clue[i], cx + 14, cy);
+        }
+      }
+
+      // Draw grid cells
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          const x = offsetX + c * cellSize;
+          const y = offsetY + r * cellSize;
+
+          // Cell background
+          if (playerGrid[r][c] === 1) {
+            ctx.fillStyle = solved ? "#ffc83d" : "#3d2c1e";
+            ctx.fillRect(x, y, cellSize, cellSize);
+          } else {
+            ctx.fillStyle = (r + c) % 2 === 0 ? "#fdf6e3" : "#f5ecd5";
+            ctx.fillRect(x, y, cellSize, cellSize);
+          }
+
+          // X mark
+          if (playerGrid[r][c] === 2) {
+            ctx.strokeStyle = "rgba(200,80,80,0.5)";
+            ctx.lineWidth = 2;
+            const m = cellSize * 0.25;
+            ctx.beginPath(); ctx.moveTo(x + m, y + m); ctx.lineTo(x + cellSize - m, y + cellSize - m); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x + cellSize - m, y + m); ctx.lineTo(x + m, y + cellSize - m); ctx.stroke();
+          }
+
+          // Cell border
+          ctx.strokeStyle = "rgba(61,44,30,0.2)";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x, y, cellSize, cellSize);
+        }
+      }
+
+      // Thicker lines every 5 cells
+      ctx.strokeStyle = "rgba(61,44,30,0.5)";
+      ctx.lineWidth = 2;
+      for (let i = 0; i <= size; i += 5) {
+        // Vertical
+        ctx.beginPath(); ctx.moveTo(offsetX + i * cellSize, offsetY); ctx.lineTo(offsetX + i * cellSize, offsetY + size * cellSize); ctx.stroke();
+        // Horizontal
+        ctx.beginPath(); ctx.moveTo(offsetX, offsetY + i * cellSize); ctx.lineTo(offsetX + size * cellSize, offsetY + i * cellSize); ctx.stroke();
+      }
+      // Outer border
+      ctx.strokeStyle = "rgba(61,44,30,0.6)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(offsetX, offsetY, size * cellSize, size * cellSize);
+
+      // Solved message
+      if (solved) {
+        ctx.fillStyle = "rgba(255,200,61,0.9)";
+        ctx.font = "bold 18px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("Solved! 🎉", canvas.width / 2, canvas.height - 20);
+      }
+    }
+
+    function checkSolved() {
+      const p = PUZZLES[currentPuzzle];
+      const size = p.size;
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (p.grid[r][c] === 1 && playerGrid[r][c] !== 1) return false;
+          if (p.grid[r][c] === 0 && playerGrid[r][c] === 1) return false;
+        }
+      }
+      return true;
+    }
+
+    function handleClick(e) {
+      if (solved) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const mx = (e.clientX - rect.left) * scaleX;
+      const my = (e.clientY - rect.top) * scaleY;
+
+      const size = PUZZLES[currentPuzzle].size;
+      const c = Math.floor((mx - offsetX) / cellSize);
+      const r = Math.floor((my - offsetY) / cellSize);
+      if (r < 0 || r >= size || c < 0 || c >= size) return;
+
+      if (mode === "fill") {
+        playerGrid[r][c] = playerGrid[r][c] === 1 ? 0 : 1;
+      } else {
+        playerGrid[r][c] = playerGrid[r][c] === 2 ? 0 : 2;
+      }
+
+      if (checkSolved()) {
+        solved = true;
+        statusEl.textContent = "🎉 Solved!";
+        playCelebration();
+      }
+      draw();
+    }
+
+    // Prevent right-click context menu on canvas
+    canvas.addEventListener("contextmenu", e => { e.preventDefault(); });
+
+    // Right-click to mark
+    canvas.addEventListener("mousedown", e => {
+      if (e.button === 2) {
+        e.preventDefault();
+        if (solved) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mx = (e.clientX - rect.left) * scaleX;
+        const my = (e.clientY - rect.top) * scaleY;
+        const size = PUZZLES[currentPuzzle].size;
+        const c = Math.floor((mx - offsetX) / cellSize);
+        const r = Math.floor((my - offsetY) / cellSize);
+        if (r < 0 || r >= size || c < 0 || c >= size) return;
+        playerGrid[r][c] = playerGrid[r][c] === 2 ? 0 : 2;
+        draw();
+      }
+    });
+
+    canvas.addEventListener("click", handleClick);
+
+    // Touch support
+    canvas.addEventListener("touchstart", e => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      handleClick({ clientX: touch.clientX, clientY: touch.clientY });
+    }, { passive: false });
+
+    // Mode toggle
+    fillBtn.addEventListener("click", () => {
+      mode = "fill";
+      fillBtn.classList.add("active");
+      markBtn.classList.remove("active");
+    });
+    markBtn.addEventListener("click", () => {
+      mode = "mark";
+      markBtn.classList.add("active");
+      fillBtn.classList.remove("active");
+    });
+
+    // Puzzle select
+    select.addEventListener("change", () => {
+      currentPuzzle = parseInt(select.value);
+      initPuzzle();
+    });
+
+    // Reset
+    resetBtn.addEventListener("click", () => { initPuzzle(); playPop(); });
+
+    initPuzzle();
   }
 
 })();

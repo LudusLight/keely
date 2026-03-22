@@ -25,11 +25,11 @@ body {
   background: var(--cream);
   line-height: 1.6;
   overflow-x: hidden;
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M4 22L14 4l10 18H4z' fill='%23ffc83d' stroke='%233d2c1e' stroke-width='2'/%3E%3Ccircle cx='10' cy='17' r='2' fill='%23e8a317' opacity='.5'/%3E%3Ccircle cx='16' cy='14' r='1.5' fill='%23e8a317' opacity='.5'/%3E%3C/svg%3E") 14 22, auto;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cdefs%3E%3Cfilter id='s'%3E%3CfeDropShadow dx='1' dy='2' stdDeviation='1.5' flood-color='%23000' flood-opacity='0.25'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M6 24L16 6l10 18H6z' fill='%23ffc83d' filter='url(%23s)'/%3E%3Ccircle cx='12' cy='19' r='2' fill='%23e8a317' opacity='.5'/%3E%3Ccircle cx='18' cy='16' r='1.5' fill='%23e8a317' opacity='.5'/%3E%3C/svg%3E") 16 24, auto;
 }
 
 a, button, .fav-card, .about-card, .tilt-card, .tag, .arcade-tab, .diary-card {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='16' r='6' fill='%23a09080' stroke='%233d2c1e' stroke-width='1'/%3E%3Ccircle cx='7' cy='9' r='3' fill='%23a09080' stroke='%233d2c1e' stroke-width='0.8'/%3E%3Ccircle cx='17' cy='9' r='3' fill='%23a09080' stroke='%233d2c1e' stroke-width='0.8'/%3E%3Ccircle cx='12' cy='6' r='2.5' fill='%23a09080' stroke='%233d2c1e' stroke-width='0.8'/%3E%3Ccircle cx='12' cy='16' r='3' fill='%23f5a0b0'/%3E%3C/svg%3E") 12 12, pointer;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cdefs%3E%3Cfilter id='s'%3E%3CfeDropShadow dx='1' dy='1.5' stdDeviation='1.2' flood-color='%23000' flood-opacity='0.2'/%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23s)'%3E%3Ccircle cx='14' cy='18' r='6' fill='%23a09080'/%3E%3Ccircle cx='9' cy='11' r='3' fill='%23a09080'/%3E%3Ccircle cx='19' cy='11' r='3' fill='%23a09080'/%3E%3Ccircle cx='14' cy='8' r='2.5' fill='%23a09080'/%3E%3C/g%3E%3Ccircle cx='14' cy='18' r='3' fill='%23f5a0b0'/%3E%3C/svg%3E") 14 14, pointer;
 }
 
 .handwritten { font-family: "Caveat", cursive; }
@@ -763,6 +763,15 @@ nav {
 .gc-cozy .gc-title, .gc-cozy .gc-desc { color: #FFD700; }
 .gc-party { background: linear-gradient(180deg, #FF69B4 0%, #FFB6C1 50%, #FFF0F5 100%); }
 .gc-mountain { background: linear-gradient(180deg, #87CEEB 0%, #B0C4DE 40%, #E8E8E8 70%, #355E3B 100%); }
+
+/* ========== PICROSS ========== */
+.picross-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap; justify-content: center; }
+#picross-puzzle-select { padding: 0.4rem 0.8rem; border: 2px solid var(--cream-dark); border-radius: 8px; font-family: inherit; font-size: 0.85rem; background: #fff; color: var(--warm-brown); }
+#picross-status { font-size: 0.85rem; color: var(--warm-brown); font-weight: 600; }
+#picross-canvas { border: 2px solid var(--cream-dark); border-radius: var(--radius); display: block; margin: 0 auto; max-width: 100%; }
+.picross-controls { display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.75rem; flex-wrap: wrap; }
+.picross-mode-btn { opacity: 0.6; transition: opacity 0.2s; }
+.picross-mode-btn.active { opacity: 1; box-shadow: 0 0 0 3px rgba(255,200,61,0.5); }
 
 @media (max-width: 768px) {
   .gallery-grid { grid-template-columns: repeat(2, 1fr); }
