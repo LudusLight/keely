@@ -46,6 +46,7 @@
     initPicross();
     initGallery();
     initQuiz();
+    initObservatory();
     initContactForm();
     initFarewellScene();
     initMouseHole();
@@ -2386,6 +2387,290 @@
     const div = document.createElement("div");
     div.textContent = str;
     return div.innerHTML;
+  }
+
+  // ========== MOUSE OBSERVATORY ==========
+  function initObservatory() {
+    const canvas = $("#observatory-canvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const label = $("#constellation-label");
+    const legendEl = $("#observatory-legend");
+
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+    }
+    resize();
+    window.addEventListener("resize", resize);
+
+    const W = () => canvas.width / window.devicePixelRatio;
+    const H = () => canvas.height / window.devicePixelRatio;
+
+    // Constellations defined as normalized coordinates [0-1]
+    const constellations = [
+      {
+        name: "The Great Cheese Wheel",
+        lore: "Said to grant eternal snacking to those who gaze upon it.",
+        color: "#ffc83d",
+        emoji: "🧀",
+        stars: [[0.15,0.2],[0.22,0.12],[0.30,0.10],[0.38,0.12],[0.42,0.20],[0.40,0.30],[0.35,0.35],[0.25,0.35],[0.18,0.30]],
+        lines: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,0],[1,7],[3,5]]
+      },
+      {
+        name: "Whiskerion the Brave",
+        lore: "A legendary mouse who once stole cheese from the moon.",
+        color: "#b088f9",
+        emoji: "🐭",
+        stars: [[0.65,0.15],[0.60,0.08],[0.70,0.08],[0.65,0.22],[0.60,0.30],[0.70,0.30],[0.62,0.38],[0.68,0.38],[0.58,0.18],[0.72,0.18]],
+        lines: [[0,1],[0,2],[0,3],[3,4],[3,5],[4,6],[5,7],[1,8],[2,9]]
+      },
+      {
+        name: "The Cozy Burrow",
+        lore: "Where all good mice rest after a long night of adventuring.",
+        color: "#ff85a2",
+        emoji: "🏠",
+        stars: [[0.15,0.60],[0.25,0.50],[0.35,0.60],[0.18,0.75],[0.32,0.75],[0.25,0.55]],
+        lines: [[0,1],[1,2],[0,3],[2,4],[3,4],[1,5]]
+      },
+      {
+        name: "The Eternal Mousetrap",
+        lore: "A warning to foolish mice who chase suspicious free cheese.",
+        color: "#ff6b35",
+        emoji: "⚠️",
+        stars: [[0.78,0.50],[0.90,0.50],[0.90,0.60],[0.78,0.60],[0.84,0.45],[0.84,0.65]],
+        lines: [[0,1],[1,2],[2,3],[3,0],[4,5],[0,4],[1,4]]
+      },
+      {
+        name: "Paws Major",
+        lore: "The guiding paw — follow it and you'll always find cheese.",
+        color: "#7fcd91",
+        emoji: "🐾",
+        stars: [[0.50,0.55],[0.45,0.62],[0.55,0.62],[0.43,0.72],[0.47,0.72],[0.53,0.72],[0.57,0.72],[0.50,0.80]],
+        lines: [[0,1],[0,2],[1,3],[1,4],[2,5],[2,6],[0,7]]
+      },
+      {
+        name: "The Midnight Crumb Trail",
+        lore: "Scattered across the sky by a very messy celestial mouse.",
+        color: "#e8a317",
+        emoji: "✨",
+        stars: [[0.05,0.85],[0.12,0.80],[0.20,0.88],[0.30,0.82],[0.40,0.90],[0.50,0.85],[0.60,0.90],[0.70,0.83],[0.80,0.88],[0.90,0.82],[0.95,0.90]],
+        lines: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10]]
+      }
+    ];
+
+    // Background stars
+    const bgStars = [];
+    for (let i = 0; i < 200; i++) {
+      bgStars.push({
+        x: Math.random(), y: Math.random(),
+        r: Math.random() * 1.2 + 0.3,
+        twinkle: Math.random() * Math.PI * 2,
+        speed: 0.5 + Math.random() * 2
+      });
+    }
+
+    // Shooting stars
+    const shootingStars = [];
+    function maybeSpawnShootingStar() {
+      if (shootingStars.length < 2 && Math.random() < 0.005) {
+        shootingStars.push({
+          x: Math.random() * 0.5, y: Math.random() * 0.3,
+          vx: 0.003 + Math.random() * 0.004,
+          vy: 0.001 + Math.random() * 0.002,
+          life: 1, decay: 0.01 + Math.random() * 0.015,
+          len: 0.05 + Math.random() * 0.05
+        });
+      }
+    }
+
+    let mouseX = -1, mouseY = -1;
+    let activeConstellation = null;
+    let revealProgress = {};
+    let discovered = new Set();
+
+    constellations.forEach((c, i) => revealProgress[i] = 0);
+
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouseX = (e.clientX - rect.left) / rect.width;
+      mouseY = (e.clientY - rect.top) / rect.height;
+    });
+    canvas.addEventListener("mouseleave", () => { mouseX = -1; mouseY = -1; });
+
+    // Touch support
+    canvas.addEventListener("touchmove", (e) => {
+      e.preventDefault();
+      const t = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      mouseX = (t.clientX - rect.left) / rect.width;
+      mouseY = (t.clientY - rect.top) / rect.height;
+    }, { passive: false });
+    canvas.addEventListener("touchend", () => { mouseX = -1; mouseY = -1; });
+
+    // Build legend
+    constellations.forEach((c, i) => {
+      const item = document.createElement("div");
+      item.className = "legend-item";
+      item.dataset.index = i;
+      item.innerHTML = `<span class="legend-dot" style="background:${c.color}"></span>${c.emoji} ${c.name}`;
+      legendEl.appendChild(item);
+    });
+
+    function updateLegend() {
+      legendEl.querySelectorAll(".legend-item").forEach(item => {
+        const i = parseInt(item.dataset.index);
+        if (discovered.has(i)) item.classList.add("discovered");
+      });
+    }
+
+    function getClosestConstellation() {
+      if (mouseX < 0) return null;
+      let best = null, bestDist = Infinity;
+      constellations.forEach((c, i) => {
+        let minDist = Infinity;
+        c.stars.forEach(s => {
+          const dx = mouseX - s[0], dy = mouseY - s[1];
+          const d = Math.sqrt(dx*dx + dy*dy);
+          if (d < minDist) minDist = d;
+        });
+        if (minDist < 0.08 && minDist < bestDist) {
+          bestDist = minDist;
+          best = i;
+        }
+      });
+      return best;
+    }
+
+    let time = 0;
+    function draw() {
+      time += 0.016;
+      const w = W(), h = H();
+      ctx.clearRect(0, 0, w, h);
+
+      // Subtle nebula clouds
+      const grd = ctx.createRadialGradient(w*0.3, h*0.3, 0, w*0.3, h*0.3, w*0.4);
+      grd.addColorStop(0, "rgba(80,40,120,0.04)");
+      grd.addColorStop(1, "transparent");
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, w, h);
+      const grd2 = ctx.createRadialGradient(w*0.7, h*0.6, 0, w*0.7, h*0.6, w*0.3);
+      grd2.addColorStop(0, "rgba(40,60,120,0.04)");
+      grd2.addColorStop(1, "transparent");
+      ctx.fillStyle = grd2;
+      ctx.fillRect(0, 0, w, h);
+
+      // Background stars
+      bgStars.forEach(s => {
+        const alpha = 0.3 + 0.4 * Math.sin(time * s.speed + s.twinkle);
+        ctx.beginPath();
+        ctx.arc(s.x * w, s.y * h, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,240,${alpha})`;
+        ctx.fill();
+      });
+
+      // Shooting stars
+      maybeSpawnShootingStar();
+      for (let i = shootingStars.length - 1; i >= 0; i--) {
+        const ss = shootingStars[i];
+        ss.x += ss.vx; ss.y += ss.vy; ss.life -= ss.decay;
+        if (ss.life <= 0) { shootingStars.splice(i, 1); continue; }
+        ctx.beginPath();
+        ctx.moveTo(ss.x * w, ss.y * h);
+        ctx.lineTo((ss.x - ss.vx * ss.len * 50) * w, (ss.y - ss.vy * ss.len * 50) * h);
+        const grad = ctx.createLinearGradient(ss.x * w, ss.y * h, (ss.x - ss.vx * 20) * w, (ss.y - ss.vy * 20) * h);
+        grad.addColorStop(0, `rgba(255,250,220,${ss.life})`);
+        grad.addColorStop(1, "transparent");
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
+      // Determine active constellation
+      const closest = getClosestConstellation();
+      constellations.forEach((c, i) => {
+        const target = (closest === i) ? 1 : 0;
+        revealProgress[i] += (target - revealProgress[i]) * 0.08;
+        if (revealProgress[i] < 0.01) revealProgress[i] = 0;
+      });
+
+      if (closest !== null && closest !== activeConstellation) {
+        activeConstellation = closest;
+        discovered.add(closest);
+        updateLegend();
+      } else if (closest === null) {
+        activeConstellation = null;
+      }
+
+      // Draw constellations
+      constellations.forEach((c, i) => {
+        const p = revealProgress[i];
+        const isDiscovered = discovered.has(i);
+        const baseAlpha = isDiscovered ? 0.15 : 0.05;
+
+        // Draw lines
+        if (p > 0.01) {
+          ctx.strokeStyle = c.color;
+          ctx.lineWidth = 1.5;
+          ctx.globalAlpha = p * 0.6;
+          c.lines.forEach(([a, b]) => {
+            ctx.beginPath();
+            ctx.moveTo(c.stars[a][0] * w, c.stars[a][1] * h);
+            ctx.lineTo(c.stars[b][0] * w, c.stars[b][1] * h);
+            ctx.stroke();
+          });
+          ctx.globalAlpha = 1;
+        }
+
+        // Draw constellation stars
+        c.stars.forEach(s => {
+          const alpha = Math.max(baseAlpha, p);
+          const r = 2 + p * 2;
+
+          // Glow
+          if (p > 0.1) {
+            ctx.beginPath();
+            ctx.arc(s[0]*w, s[1]*h, r + 4, 0, Math.PI*2);
+            const glow = ctx.createRadialGradient(s[0]*w, s[1]*h, 0, s[0]*w, s[1]*h, r + 4);
+            glow.addColorStop(0, c.color + Math.round(p * 40).toString(16).padStart(2,"0"));
+            glow.addColorStop(1, "transparent");
+            ctx.fillStyle = glow;
+            ctx.fill();
+          }
+
+          ctx.beginPath();
+          ctx.arc(s[0]*w, s[1]*h, r, 0, Math.PI*2);
+          ctx.fillStyle = c.color;
+          ctx.globalAlpha = alpha;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        });
+      });
+
+      // Label
+      if (activeConstellation !== null) {
+        const c = constellations[activeConstellation];
+        const cx = c.stars.reduce((s, p) => s + p[0], 0) / c.stars.length;
+        const cy = c.stars.reduce((s, p) => s + p[1], 0) / c.stars.length;
+        const rect = canvas.getBoundingClientRect();
+        label.style.left = (cx * rect.width + 15) + "px";
+        label.style.top = (cy * rect.height - 30) + "px";
+        label.innerHTML = `<div class="cl-name">${c.emoji} ${c.name}</div><div class="cl-lore">${c.lore}</div>`;
+        label.classList.add("visible");
+      } else {
+        label.classList.remove("visible");
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    // Only animate when visible
+    const obs = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) draw();
+    }, { threshold: 0.1 });
+    obs.observe(canvas);
   }
 
   // ========== CONTACT FORM ==========

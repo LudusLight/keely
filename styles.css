@@ -804,7 +804,49 @@ nav {
 }
 .quiz-retake:hover { background: var(--cheese-dark); }
 
-/* ========== SQUEAKBOARD ========== */
+/* ========== MOUSE OBSERVATORY ========== */
+.observatory-section { background: #0a0a1a; }
+.observatory-section .section-header h2 { color: #e8dcc8; }
+.observatory-section .section-header .squiggly-svg { color: var(--cheese-yellow); }
+.observatory-desc { color: rgba(232,220,200,0.6); }
+.observatory-wrap {
+  position: relative; width: 100%; max-width: 900px; margin: 0 auto 1.5rem;
+  border-radius: var(--radius); overflow: hidden;
+  border: 2px solid rgba(255,200,61,0.15);
+  box-shadow: 0 0 40px rgba(255,200,61,0.05), inset 0 0 60px rgba(0,0,0,0.3);
+}
+#observatory-canvas {
+  display: block; width: 100%; height: 450px; cursor: crosshair;
+  background: radial-gradient(ellipse at 60% 40%, #111133 0%, #0a0a1a 60%, #050510 100%);
+}
+.constellation-label {
+  position: absolute; padding: 0.6rem 1rem; background: rgba(10,10,26,0.9);
+  border: 1px solid rgba(255,200,61,0.3); border-radius: 8px;
+  color: var(--cheese-yellow); font-size: 0.85rem; font-weight: 700;
+  pointer-events: none; opacity: 0; transition: opacity 0.3s;
+  white-space: nowrap; z-index: 10;
+}
+.constellation-label.visible { opacity: 1; }
+.constellation-label .cl-name { font-size: 1rem; margin-bottom: 0.2rem; }
+.constellation-label .cl-lore { color: rgba(232,220,200,0.7); font-weight: 400; font-size: 0.8rem; font-style: italic; }
+.observatory-legend {
+  display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center;
+  max-width: 900px; margin: 0 auto;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.4rem 0.8rem; background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 20px;
+  font-size: 0.75rem; color: rgba(232,220,200,0.5);
+  transition: all 0.3s; cursor: default;
+}
+.legend-item .legend-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.legend-item.discovered { color: var(--cheese-yellow); border-color: rgba(255,200,61,0.3); }
+.legend-item.discovered .legend-dot { box-shadow: 0 0 6px currentColor; }
+.wd-observatory svg path { fill: #0a0a1a; }
+
 /* ========== CONTACT ========== */
 .contact-section { background: var(--cream); }
 #contact-form { display: flex; flex-direction: column; gap: 1.25rem; max-width: 560px; margin: 0 auto; text-align: left; }
@@ -997,6 +1039,7 @@ footer { background: var(--warm-brown); color: var(--cream); position: relative;
   .du-categories { gap: 0.5rem; }
   .du-items { gap: 0.3rem; flex-wrap: wrap; }
   .du-item { width: 38px; height: 28px; font-size: 0.5rem; }
+  #observatory-canvas { height: 320px; }
   .namegen-result { font-size: 1.4rem; padding: 0.75rem 1rem; }
   .oracle-8ball-wrap { width: 130px; height: 130px; }
   .ball-body { width: 130px; height: 130px; }
