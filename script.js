@@ -1444,23 +1444,27 @@
     }
 
     // Outline helper for anime cel-shaded look
+    // Ghibli-style outline — dark warm brown, variable width
+    const GH_OL = "rgba(72,48,32,0.55)";
     function ol(cb, c, w) {
-      ctx.strokeStyle = c || "rgba(0,0,0,0.3)";
-      ctx.lineWidth = w || 2;
+      ctx.strokeStyle = c || GH_OL;
+      ctx.lineWidth = w || 1.8;
       ctx.lineJoin = "round"; ctx.lineCap = "round";
       cb(); ctx.stroke();
     }
-    // Shading helper — darker version of a color
+    // Warm shade helper — shifts toward warm brown, not just darker
     function shade(hex, amt) {
       let r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-      r = Math.max(0, r - amt); g = Math.max(0, g - amt); b = Math.max(0, b - amt);
+      r = Math.max(0, r - Math.floor(amt * 0.6));
+      g = Math.max(0, g - amt);
+      b = Math.max(0, b - Math.floor(amt * 1.1));
       return `rgb(${r},${g},${b})`;
     }
 
     // ----- Ear drawing functions (anime style) -----
     function drawEars(fur) {
       const e = sel.ears;
-      const OL = "rgba(0,0,0,0.3)";
+      const OL = GH_OL;
       function earPair(fn) { [[-1,-0.3],[1,0.3]].forEach(([s,r]) => fn(s,r)); }
       if (e === 0) { // Round
         earPair((s) => {
@@ -1538,91 +1542,69 @@
       }
     }
 
-    // ----- Eye drawing functions (anime style — big, expressive) -----
+    // ----- Eye drawing functions (Ghibli style — warm, round, simple) -----
     function drawEyes() {
       const e = sel.eyes;
-      const EX = [-12, 12], EY = MY - 22;
-      const R = 8; // Anime eye radius — much bigger
-      function animeEye(x, irisColor, flip) {
-        // White
+      const EX = [-11, 11], EY = MY - 20;
+      const R = 7;
+      function ghibliEye(x, irisColor) {
         ctx.fillStyle = "#fff";
-        ctx.beginPath(); ctx.ellipse(MX+x, EY, R, R+1, 0, 0, Math.PI*2); ctx.fill();
-        // Iris
+        ctx.beginPath(); ctx.arc(MX+x, EY, R, 0, Math.PI*2); ctx.fill();
         ctx.fillStyle = irisColor;
-        ctx.beginPath(); ctx.arc(MX+x, EY+1, R-2, 0, Math.PI*2); ctx.fill();
-        // Pupil
-        ctx.fillStyle = "#111";
-        ctx.beginPath(); ctx.arc(MX+x, EY+2, R-5, 0, Math.PI*2); ctx.fill();
-        // Big shine
-        ctx.fillStyle = "#fff";
-        ctx.beginPath(); ctx.arc(MX+x-2, EY-2, 3, 0, Math.PI*2); ctx.fill();
-        // Small shine
-        ctx.beginPath(); ctx.arc(MX+x+2.5, EY+3, 1.5, 0, Math.PI*2); ctx.fill();
-        // Outline
-        ol(() => { ctx.beginPath(); ctx.ellipse(MX+x, EY, R, R+1, 0, 0, Math.PI*2); }, "rgba(0,0,0,0.4)", 1.5);
-        // Upper lid shadow
-        ctx.fillStyle = "rgba(0,0,0,0.08)";
-        ctx.beginPath(); ctx.ellipse(MX+x, EY-3, R-1, 4, 0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(MX+x, EY+0.5, R-1.5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#1a1008";
+        ctx.beginPath(); ctx.arc(MX+x, EY+1, R-3.5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.85)";
+        ctx.beginPath(); ctx.arc(MX+x-1.5, EY-1.5, 2, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.beginPath(); ctx.arc(MX+x+2, EY+2, 1, 0, Math.PI*2); ctx.fill();
+        ol(() => { ctx.beginPath(); ctx.arc(MX+x, EY, R, 0, Math.PI*2); }, GH_OL, 1.5);
       }
-      if (e === 0) { // Classic anime
-        EX.forEach(x => animeEye(x, "#4488cc"));
-      } else if (e === 1) { // Sparkle
+      if (e === 0) { // Classic — warm brown
+        EX.forEach(x => ghibliEye(x, "#8B6240"));
+      } else if (e === 1) { // Sparkle — amber
         EX.forEach(x => {
-          ctx.fillStyle = "#fff";
-          ctx.beginPath(); ctx.ellipse(MX+x, EY, R+1, R+2, 0, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = "#6688dd";
-          ctx.beginPath(); ctx.arc(MX+x, EY+1, R-1, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = "#4466bb";
-          ctx.beginPath(); ctx.arc(MX+x, EY+2, R-4, 0, Math.PI*2); ctx.fill();
-          // Multiple sparkle highlights
-          ctx.fillStyle = "#fff";
-          ctx.beginPath(); ctx.arc(MX+x-3, EY-3, 3.5, 0, Math.PI*2); ctx.fill();
-          ctx.beginPath(); ctx.arc(MX+x+3, EY+3, 2, 0, Math.PI*2); ctx.fill();
-          ctx.beginPath(); ctx.arc(MX+x-1, EY+4, 1, 0, Math.PI*2); ctx.fill();
-          ctx.beginPath(); ctx.arc(MX+x+4, EY-1, 1, 0, Math.PI*2); ctx.fill();
-          ol(() => { ctx.beginPath(); ctx.ellipse(MX+x, EY, R+1, R+2, 0, 0, Math.PI*2); }, "rgba(0,0,0,0.35)", 1.5);
+          ghibliEye(x, "#c08030");
+          ctx.fillStyle = "rgba(255,255,255,0.6)";
+          ctx.beginPath(); ctx.arc(MX+x+2.5, EY+2.5, 1.2, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(MX+x-3, EY+1, 0.8, 0, Math.PI*2); ctx.fill();
         });
       } else if (e === 2) { // Sleepy
         EX.forEach(x => {
           ctx.fillStyle = "#fff";
-          ctx.beginPath(); ctx.ellipse(MX+x, EY+2, R, R-2, 0, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = "#4488cc";
-          ctx.beginPath(); ctx.ellipse(MX+x, EY+3, R-2, R-4, 0, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = "#111";
-          ctx.beginPath(); ctx.ellipse(MX+x, EY+3, R-5, R-6, 0, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = "#fff";
-          ctx.beginPath(); ctx.arc(MX+x-1, EY+1, 1.5, 0, Math.PI*2); ctx.fill();
-          // Heavy upper lid
-          ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.lineWidth = 3; ctx.lineCap = "round";
-          ctx.beginPath(); ctx.arc(MX+x, EY, R, Math.PI+0.5, -0.5); ctx.stroke();
+          ctx.beginPath(); ctx.ellipse(MX+x, EY+2, R, R*0.5, 0, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = "#8B6240";
+          ctx.beginPath(); ctx.ellipse(MX+x, EY+3, R-2, R*0.3, 0, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = "#1a1008";
+          ctx.beginPath(); ctx.ellipse(MX+x, EY+3, R-4, R*0.2, 0, 0, Math.PI*2); ctx.fill();
+          ctx.strokeStyle = GH_OL; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.arc(MX+x, EY, R, Math.PI+0.4, -0.4); ctx.stroke();
         });
-      } else if (e === 3) { // Cat
+      } else if (e === 3) { // Cat — green
         EX.forEach(x => {
           ctx.fillStyle = "#fff";
-          ctx.beginPath(); ctx.ellipse(MX+x, EY, R, R+1, 0, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = "#88cc40";
-          ctx.beginPath(); ctx.arc(MX+x, EY+1, R-2, 0, Math.PI*2); ctx.fill();
-          // Cat slit pupil
-          ctx.fillStyle = "#111";
-          ctx.beginPath(); ctx.ellipse(MX+x, EY+1, 2, R-2, 0, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = "#fff";
-          ctx.beginPath(); ctx.arc(MX+x-2, EY-2, 2.5, 0, Math.PI*2); ctx.fill();
-          ctx.beginPath(); ctx.arc(MX+x+2, EY+3, 1, 0, Math.PI*2); ctx.fill();
-          ol(() => { ctx.beginPath(); ctx.ellipse(MX+x, EY, R, R+1, 0, 0, Math.PI*2); }, "rgba(0,0,0,0.4)", 1.5);
+          ctx.beginPath(); ctx.arc(MX+x, EY, R, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = "#6a9a38";
+          ctx.beginPath(); ctx.arc(MX+x, EY+0.5, R-1.5, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = "#1a1008";
+          ctx.beginPath(); ctx.ellipse(MX+x, EY+0.5, 1.8, R-2, 0, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = "rgba(255,255,255,0.8)";
+          ctx.beginPath(); ctx.arc(MX+x-1.5, EY-1.5, 1.8, 0, Math.PI*2); ctx.fill();
+          ol(() => { ctx.beginPath(); ctx.arc(MX+x, EY, R, 0, Math.PI*2); }, GH_OL, 1.5);
         });
       } else if (e === 4) { // Heart
         EX.forEach(x => {
-          ctx.fillStyle = "#ff4488";
-          const s = R * 0.9;
+          ctx.fillStyle = "#c85070";
+          const s = R * 0.85;
           ctx.beginPath(); ctx.arc(MX+x-s*0.4, EY-s*0.2, s*0.55, 0, Math.PI*2); ctx.fill();
           ctx.beginPath(); ctx.arc(MX+x+s*0.4, EY-s*0.2, s*0.55, 0, Math.PI*2); ctx.fill();
           ctx.beginPath(); ctx.moveTo(MX+x-s*0.9, EY+1); ctx.lineTo(MX+x, EY+s*1.1); ctx.lineTo(MX+x+s*0.9, EY+1); ctx.fill();
-          ctx.fillStyle = "rgba(255,255,255,0.4)";
-          ctx.beginPath(); ctx.arc(MX+x-2, EY-3, 2, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = "rgba(255,255,255,0.35)";
+          ctx.beginPath(); ctx.arc(MX+x-2, EY-2, 1.5, 0, Math.PI*2); ctx.fill();
         });
       } else if (e === 5) { // Star
         EX.forEach(x => {
-          ctx.fillStyle = "#ffc83d";
+          ctx.fillStyle = "#d4a020";
           ctx.beginPath();
           for (let i = 0; i < 5; i++) {
             const a = Math.PI*2*i/5 - Math.PI/2, a2 = a+Math.PI/5;
@@ -1634,60 +1616,55 @@
           ctx.beginPath(); ctx.arc(MX+x-2, EY-3, 2, 0, Math.PI*2); ctx.fill();
         });
       } else if (e === 6) { // Wink
-        animeEye(-12, "#4488cc");
-        // Winking eye — curved line
-        ctx.strokeStyle = "#222"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
-        ctx.beginPath(); ctx.arc(MX+12, EY+1, R-1, 0.3, Math.PI-0.3); ctx.stroke();
-        // Cute lash
-        ctx.beginPath(); ctx.moveTo(MX+18, EY-2); ctx.lineTo(MX+22, EY-5); ctx.stroke();
+        ghibliEye(-11, "#8B6240");
+        ctx.strokeStyle = GH_OL; ctx.lineWidth = 2; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.arc(MX+11, EY+1, R-1, 0.3, Math.PI-0.3); ctx.stroke();
       } else if (e === 7) { // Closed (happy)
         EX.forEach(x => {
-          ctx.strokeStyle = "#222"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+          ctx.strokeStyle = GH_OL; ctx.lineWidth = 2; ctx.lineCap = "round";
           ctx.beginPath(); ctx.arc(MX+x, EY+2, R-2, Math.PI+0.4, -0.4); ctx.stroke();
         });
-      } else if (e === 8) { // Dot
+      } else if (e === 8) { // Dot (Totoro-style)
         EX.forEach(x => {
-          ctx.fillStyle = "#222";
+          ctx.fillStyle = "#2a1a0a";
           ctx.beginPath(); ctx.arc(MX+x, EY, 3.5, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = "#fff";
-          ctx.beginPath(); ctx.arc(MX+x+1, EY-1, 1, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = "rgba(255,255,255,0.7)";
+          ctx.beginPath(); ctx.arc(MX+x+0.8, EY-1, 1, 0, Math.PI*2); ctx.fill();
         });
       } else if (e === 9) { // Lashes
         EX.forEach((x, idx) => {
-          animeEye(x, "#8855aa");
+          ghibliEye(x, "#7a5535");
           const s = idx === 0 ? -1 : 1;
-          ctx.strokeStyle = "#222"; ctx.lineWidth = 2; ctx.lineCap = "round";
-          ctx.beginPath(); ctx.moveTo(MX+x+s*R, EY-4); ctx.lineTo(MX+x+s*(R+5), EY-8); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(MX+x+s*(R-1), EY-1); ctx.lineTo(MX+x+s*(R+4), EY-3); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(MX+x+s*(R-2), EY+2); ctx.lineTo(MX+x+s*(R+3), EY+1); ctx.stroke();
+          ctx.strokeStyle = GH_OL; ctx.lineWidth = 1.5; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(MX+x+s*R, EY-3); ctx.lineTo(MX+x+s*(R+4), EY-6); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(MX+x+s*(R-1), EY); ctx.lineTo(MX+x+s*(R+3), EY-2); ctx.stroke();
         });
       } else if (e === 10) { // Angry
         EX.forEach((x, idx) => {
-          animeEye(x, "#cc4444");
+          ghibliEye(x, "#9a4030");
           const s = idx === 0 ? 1 : -1;
-          ctx.strokeStyle = "#222"; ctx.lineWidth = 3; ctx.lineCap = "round";
-          ctx.beginPath(); ctx.moveTo(MX+x-R, EY-R-2-s*2); ctx.lineTo(MX+x+R, EY-R-2+s*2); ctx.stroke();
+          ctx.strokeStyle = GH_OL; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(MX+x-R, EY-R-1-s*2); ctx.lineTo(MX+x+R, EY-R-1+s*2); ctx.stroke();
         });
       } else if (e === 11) { // Sad
         EX.forEach((x, idx) => {
-          animeEye(x, "#5577bb");
+          ghibliEye(x, "#6080a0");
           const s = idx === 0 ? -1 : 1;
-          ctx.strokeStyle = "#222"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
-          ctx.beginPath(); ctx.moveTo(MX+x-R, EY-R-1+s*2); ctx.lineTo(MX+x+R, EY-R-1-s*2); ctx.stroke();
-          // Tear
-          ctx.fillStyle = "rgba(100,180,255,0.4)";
-          ctx.beginPath(); ctx.ellipse(MX+x+s*3, EY+R+3, 2, 3, 0, 0, Math.PI*2); ctx.fill();
+          ctx.strokeStyle = GH_OL; ctx.lineWidth = 2; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(MX+x-R, EY-R+s*2); ctx.lineTo(MX+x+R, EY-R-s*2); ctx.stroke();
+          ctx.fillStyle = "rgba(120,180,220,0.35)";
+          ctx.beginPath(); ctx.ellipse(MX+x+s*2, EY+R+2, 1.5, 2.5, 0, 0, Math.PI*2); ctx.fill();
         });
       }
     }
 
-    // ----- Mouth drawing functions (anime style) -----
+    // ----- Mouth drawing functions (Ghibli style — warm tones) -----
     function drawMouth() {
       const m = sel.mouth;
       const my = MY - 4;
       ctx.lineCap = "round"; ctx.lineJoin = "round";
       if (m === 0) { // Smile
-        ctx.strokeStyle = "#a05060"; ctx.lineWidth = 2;
+        ctx.strokeStyle = "#8a5545"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(MX, my, 5, 0.15, Math.PI-0.15); ctx.stroke();
       } else if (m === 1) { // Open
         ctx.fillStyle = "#b03050";
@@ -1697,14 +1674,14 @@
         ctx.fillStyle = "#fff";
         ctx.beginPath(); ctx.ellipse(MX, my-1, 4, 1.5, 0, 0, Math.PI*2); ctx.fill();
       } else if (m === 2) { // Cat (w)
-        ctx.strokeStyle = "#a05060"; ctx.lineWidth = 2;
+        ctx.strokeStyle = "#8a5545"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(MX-6, my); ctx.lineTo(MX-1, my+4); ctx.lineTo(MX, my+2);
         ctx.lineTo(MX+1, my+4); ctx.lineTo(MX+6, my); ctx.stroke();
       } else if (m === 3) { // Smirk
-        ctx.strokeStyle = "#a05060"; ctx.lineWidth = 2;
+        ctx.strokeStyle = "#8a5545"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(MX+3, my, 5, 0.4, Math.PI-0.6); ctx.stroke();
       } else if (m === 4) { // Tongue
-        ctx.strokeStyle = "#a05060"; ctx.lineWidth = 2;
+        ctx.strokeStyle = "#8a5545"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(MX, my, 5, 0.15, Math.PI-0.15); ctx.stroke();
         ctx.fillStyle = "#ff7088";
         ctx.beginPath(); ctx.ellipse(MX, my+5, 4, 5, 0, 0, Math.PI*2); ctx.fill();
@@ -1722,16 +1699,16 @@
         ctx.fillStyle = "#fff";
         ctx.beginPath(); ctx.moveTo(MX-7, my); ctx.lineTo(MX+7, my); ctx.lineTo(MX+5, my+3); ctx.lineTo(MX-5, my+3); ctx.fill();
       } else if (m === 7) { // Pout
-        ctx.strokeStyle = "#a05060"; ctx.lineWidth = 2;
+        ctx.strokeStyle = "#8a5545"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(MX, my+4, 4, Math.PI+0.3, -0.3); ctx.stroke();
       } else if (m === 8) { // Fangs
-        ctx.strokeStyle = "#a05060"; ctx.lineWidth = 2;
+        ctx.strokeStyle = "#8a5545"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(MX, my, 5, 0.15, Math.PI-0.15); ctx.stroke();
         ctx.fillStyle = "#fff";
         ctx.beginPath(); ctx.moveTo(MX-4, my+1); ctx.lineTo(MX-2.5, my+6); ctx.lineTo(MX-1, my+1); ctx.fill();
         ctx.beginPath(); ctx.moveTo(MX+1, my+1); ctx.lineTo(MX+2.5, my+6); ctx.lineTo(MX+4, my+1); ctx.fill();
       } else if (m === 9) { // Blep
-        ctx.strokeStyle = "#a05060"; ctx.lineWidth = 2;
+        ctx.strokeStyle = "#8a5545"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(MX-5, my+1); ctx.lineTo(MX+5, my+1); ctx.stroke();
         ctx.fillStyle = "#ff7088";
         ctx.beginPath(); ctx.ellipse(MX+4, my+4, 3, 4, 0.2, 0, Math.PI*2); ctx.fill();
@@ -1809,7 +1786,7 @@
       if (bg.drawBg) bg.drawBg(ctx);
       else { ctx.fillStyle = "#87CEEB"; ctx.fillRect(0, 0, CW, CH); }
 
-      const OL = "rgba(0,0,0,0.3)";
+      const OL = GH_OL;
 
       // Tail with outline
       ctx.strokeStyle = fur.inner; ctx.lineWidth = 4; ctx.lineCap = "round";
@@ -1881,10 +1858,10 @@
       // Nose — small cute button
       ctx.fillStyle = "#ff8faa";
       ctx.beginPath(); ctx.ellipse(MX, MY-6, 4, 3, 0, 0, Math.PI*2); ctx.fill();
-      ol(() => { ctx.beginPath(); ctx.ellipse(MX, MY-6, 4, 3, 0, 0, Math.PI*2); }, "rgba(0,0,0,0.2)", 1);
+      ol(() => { ctx.beginPath(); ctx.ellipse(MX, MY-6, 4, 3, 0, 0, Math.PI*2); }, GH_OL, 1);
 
-      // Whiskers
-      ctx.strokeStyle = "rgba(0,0,0,0.12)"; ctx.lineWidth = 1;
+      // Whiskers — warm, subtle
+      ctx.strokeStyle = "rgba(72,48,32,0.2)"; ctx.lineWidth = 1;
       [[-1,-2],[-1,0],[-1,2],[1,-2],[1,0],[1,2]].forEach(([dx,dy]) => {
         ctx.beginPath(); ctx.moveTo(MX+dx*6, MY-4); ctx.lineTo(MX+dx*30, MY-4+dy*3); ctx.stroke();
       });
