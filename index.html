@@ -223,6 +223,7 @@
             <button class="arcade-tab" data-game="picross">🧩 Picross</button>
             <button class="arcade-tab" data-game="stack">🧱 Cheese Stack</button>
             <button class="arcade-tab" data-game="breakout">🧱 Breakout</button>
+            <button class="arcade-tab" data-game="flappy">🐭 Flappy Mouse</button>
           </div>
           <div class="arcade-content">
             <div class="game-panel active" id="game-maze">
@@ -333,6 +334,15 @@
               </div>
               <canvas id="breakout-canvas" width="320" height="400"></canvas>
               <button id="breakout-start" class="btn-game">Start Game! 💥</button>
+            </div>
+            <div class="game-panel" id="game-flappy">
+              <p class="game-desc">Flap through the cheese walls! Click, tap, or press Space. 🐭🧀</p>
+              <div class="flappy-header">
+                <span>🧀 Score: <strong id="flappy-score">0</strong></span>
+                <span>🏆 Best: <strong id="flappy-best">0</strong></span>
+              </div>
+              <canvas id="flappy-canvas" width="280" height="400"></canvas>
+              <button id="flappy-start" class="btn-game">Start Flapping! 🐭</button>
             </div>
           </div>
         </div>

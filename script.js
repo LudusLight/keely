@@ -46,6 +46,7 @@
     initPicross();
     initCheeseStack();
     initBreakout();
+    initFlappyMouse();
     initGallery();
     initQuiz();
     initObservatory();
@@ -5656,6 +5657,305 @@
     }, 16);
 
     if (startBtn) startBtn.addEventListener("click", launch);
+
+    reset();
+  }
+
+  // ========== FLAPPY MOUSE ==========
+  function initFlappyMouse() {
+    const canvas = $("#flappy-canvas");
+    const scoreEl = $("#flappy-score");
+    const bestEl = $("#flappy-best");
+    const startBtn = $("#flappy-start");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+
+    const GRAVITY = 0.35;
+    const FLAP_POWER = -5.5;
+    const PIPE_W = 44;
+    const GAP_H = 110;
+    const PIPE_SPEED = 1.8;
+    const PIPE_INTERVAL = 120; // frames between pipes
+    const MOUSE_X = 60;
+    const MOUSE_R = 12;
+
+    let mouseY, mouseVY, pipes, score, bestScore, gameOver, started, running, animId;
+    let frame, flapAnim;
+
+    bestScore = parseInt(localStorage.getItem("flappyBest") || "0");
+    if (bestEl) bestEl.textContent = bestScore;
+
+    function reset() {
+      mouseY = H / 2;
+      mouseVY = 0;
+      pipes = [];
+      score = 0;
+      gameOver = false;
+      started = false;
+      running = false;
+      frame = 0;
+      flapAnim = 0;
+      if (scoreEl) scoreEl.textContent = 0;
+      if (animId) cancelAnimationFrame(animId);
+      draw();
+    }
+
+    function flap() {
+      if (gameOver) { reset(); return; }
+      if (!running) { running = true; started = true; update(); }
+      mouseVY = FLAP_POWER;
+      flapAnim = 8;
+      playSqueak();
+    }
+
+    function drawMouse(x, y) {
+      const angle = Math.min(Math.max(mouseVY * 3, -25), 45) * Math.PI / 180;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+
+      // Wings (flapping)
+      if (flapAnim > 0) {
+        ctx.fillStyle = "#b0b0b0";
+        ctx.beginPath();
+        ctx.ellipse(-2, -6, 6, 3, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      // Body
+      ctx.fillStyle = "#9e9e9e";
+      ctx.beginPath(); ctx.ellipse(0, 0, MOUSE_R, MOUSE_R - 2, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(0, 0, MOUSE_R, MOUSE_R - 2, 0, 0, Math.PI * 2); ctx.stroke();
+
+      // Belly
+      ctx.fillStyle = "#d0d0d0";
+      ctx.beginPath(); ctx.ellipse(2, 1, 7, 6, 0, 0, Math.PI * 2); ctx.fill();
+
+      // Ears
+      ctx.fillStyle = "#9e9e9e";
+      ctx.beginPath(); ctx.arc(-5, -9, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(5, -9, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(-5, -9, 5, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(5, -9, 5, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = "#f0c0c0";
+      ctx.beginPath(); ctx.arc(-5, -9, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(5, -9, 3, 0, Math.PI * 2); ctx.fill();
+
+      // Eyes
+      ctx.fillStyle = "#111";
+      ctx.beginPath(); ctx.arc(5, -2, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(11, -2, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(5.5, -3, 1, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(11.5, -3, 0.7, 0, Math.PI * 2); ctx.fill();
+
+      // Nose
+      ctx.fillStyle = "#ff8faa";
+      ctx.beginPath(); ctx.arc(14, 0, 2, 0, Math.PI * 2); ctx.fill();
+
+      // Tail
+      ctx.strokeStyle = "#8a8a8a"; ctx.lineWidth = 2; ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-MOUSE_R, 2);
+      ctx.quadraticCurveTo(-MOUSE_R - 8, -6, -MOUSE_R - 4, -10);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawPipe(pipe) {
+      // Top pipe (cheese wall)
+      const topH = pipe.gapY;
+      ctx.fillStyle = "#ffc83d";
+      ctx.fillRect(pipe.x, 0, PIPE_W, topH);
+      ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 2;
+      ctx.strokeRect(pipe.x, 0, PIPE_W, topH);
+      // Top pipe cap
+      ctx.fillStyle = "#e8a317";
+      ctx.fillRect(pipe.x - 3, topH - 10, PIPE_W + 6, 10);
+      ctx.strokeRect(pipe.x - 3, topH - 10, PIPE_W + 6, 10);
+      // Cheese holes on top
+      ctx.fillStyle = "rgba(0,0,0,0.15)";
+      for (let i = 20; i < topH - 15; i += 30) {
+        ctx.beginPath(); ctx.arc(pipe.x + 12, i, 4, 0, Math.PI * 2); ctx.fill();
+        if (i + 15 < topH - 15) { ctx.beginPath(); ctx.arc(pipe.x + PIPE_W - 12, i + 15, 3, 0, Math.PI * 2); ctx.fill(); }
+      }
+
+      // Bottom pipe
+      const botY = pipe.gapY + GAP_H;
+      const botH = H - botY;
+      ctx.fillStyle = "#ffc83d";
+      ctx.fillRect(pipe.x, botY, PIPE_W, botH);
+      ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 2;
+      ctx.strokeRect(pipe.x, botY, PIPE_W, botH);
+      // Bottom pipe cap
+      ctx.fillStyle = "#e8a317";
+      ctx.fillRect(pipe.x - 3, botY, PIPE_W + 6, 10);
+      ctx.strokeRect(pipe.x - 3, botY, PIPE_W + 6, 10);
+      // Cheese holes on bottom
+      ctx.fillStyle = "rgba(0,0,0,0.15)";
+      for (let i = botY + 20; i < H - 10; i += 30) {
+        ctx.beginPath(); ctx.arc(pipe.x + 15, i, 4, 0, Math.PI * 2); ctx.fill();
+        if (i + 15 < H - 10) { ctx.beginPath(); ctx.arc(pipe.x + PIPE_W - 10, i + 15, 3, 0, Math.PI * 2); ctx.fill(); }
+      }
+    }
+
+    function draw() {
+      // Sky gradient
+      const sky = ctx.createLinearGradient(0, 0, 0, H);
+      sky.addColorStop(0, "#87CEEB");
+      sky.addColorStop(0.7, "#b8e6ff");
+      sky.addColorStop(1, "#e8f0e0");
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, W, H);
+
+      // Clouds (simple)
+      ctx.fillStyle = "rgba(255,255,255,0.6)";
+      const cloudOffset = -(frame * 0.3) % (W + 80);
+      [0, 130, 220].forEach((cx, i) => {
+        const x = ((cx + cloudOffset) % (W + 80) + W + 80) % (W + 80) - 40;
+        const y = 30 + i * 40;
+        ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + 15, y - 5, 12, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + 25, y, 10, 0, Math.PI * 2); ctx.fill();
+      });
+
+      // Ground
+      ctx.fillStyle = "#4a8c3f";
+      ctx.fillRect(0, H - 20, W, 20);
+      ctx.fillStyle = "#3d7a34";
+      for (let i = 0; i < W; i += 6) {
+        ctx.beginPath(); ctx.moveTo(i, H - 20); ctx.lineTo(i + 3, H - 26); ctx.lineTo(i + 6, H - 20); ctx.fill();
+      }
+
+      // Pipes
+      pipes.forEach(p => drawPipe(p));
+
+      // Mouse
+      drawMouse(MOUSE_X, mouseY);
+
+      // Score on canvas
+      if (started) {
+        ctx.fillStyle = "#fff";
+        ctx.strokeStyle = "#1a1a2e";
+        ctx.lineWidth = 3;
+        ctx.font = "bold 32px 'Nunito', sans-serif";
+        ctx.textAlign = "center";
+        ctx.strokeText(score, W / 2, 45);
+        ctx.fillText(score, W / 2, 45);
+      }
+
+      // Pre-start
+      if (!started && !gameOver) {
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
+        ctx.font = "bold 15px 'Nunito', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Click or Space to flap!", W / 2, H / 2 - 40);
+      }
+
+      // Game over
+      if (gameOver) {
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(0, 0, W, H);
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 26px 'Nunito', sans-serif";
+        ctx.fillText("Game Over!", W / 2, H / 2 - 25);
+        ctx.fillStyle = "#ffc83d";
+        ctx.font = "bold 18px 'Nunito', sans-serif";
+        ctx.fillText(`Score: ${score}`, W / 2, H / 2 + 5);
+        ctx.fillStyle = "#fff";
+        ctx.font = "14px 'Nunito', sans-serif";
+        ctx.fillText(`Best: ${bestScore}`, W / 2, H / 2 + 28);
+        if (score >= bestScore && score > 0) {
+          ctx.fillStyle = "#ff6600";
+          ctx.fillText("New Best!", W / 2, H / 2 + 50);
+        }
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.fillText("Click or Space to retry", W / 2, H / 2 + 75);
+      }
+    }
+
+    function die() {
+      gameOver = true;
+      if (score > bestScore) {
+        bestScore = score;
+        localStorage.setItem("flappyBest", bestScore);
+        if (bestEl) bestEl.textContent = bestScore;
+      }
+      playPop();
+    }
+
+    function update() {
+      if (gameOver) { draw(); return; }
+
+      frame++;
+      if (flapAnim > 0) flapAnim--;
+
+      // Physics
+      mouseVY += GRAVITY;
+      mouseY += mouseVY;
+
+      // Ground/ceiling collision
+      if (mouseY + MOUSE_R >= H - 20) { mouseY = H - 20 - MOUSE_R; die(); }
+      if (mouseY - MOUSE_R <= 0) { mouseY = MOUSE_R; mouseVY = 0; }
+
+      // Spawn pipes
+      if (frame % PIPE_INTERVAL === 0) {
+        const minGap = 60;
+        const maxGap = H - 20 - GAP_H - minGap;
+        const gapY = minGap + Math.random() * (maxGap - minGap);
+        pipes.push({ x: W, gapY, scored: false });
+      }
+
+      // Move pipes & check collisions
+      for (let i = pipes.length - 1; i >= 0; i--) {
+        const p = pipes[i];
+        p.x -= PIPE_SPEED;
+
+        // Score
+        if (!p.scored && p.x + PIPE_W < MOUSE_X) {
+          p.scored = true;
+          score++;
+          if (scoreEl) scoreEl.textContent = score;
+          playCelebration();
+        }
+
+        // Remove off-screen
+        if (p.x + PIPE_W < -10) { pipes.splice(i, 1); continue; }
+
+        // Collision with mouse (circle vs rect)
+        const mx = MOUSE_X, my = mouseY, mr = MOUSE_R - 2;
+        // Top pipe
+        if (mx + mr > p.x && mx - mr < p.x + PIPE_W && my - mr < p.gapY) { die(); }
+        // Bottom pipe
+        if (mx + mr > p.x && mx - mr < p.x + PIPE_W && my + mr > p.gapY + GAP_H) { die(); }
+      }
+
+      draw();
+      if (!gameOver) animId = requestAnimationFrame(update);
+    }
+
+    // Input
+    canvas.addEventListener("click", flap);
+    canvas.addEventListener("touchstart", (e) => { e.preventDefault(); flap(); }, { passive: false });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === " " && $("#game-flappy") && $("#game-flappy").classList.contains("active")) {
+        e.preventDefault();
+        flap();
+      }
+    });
+
+    if (startBtn) startBtn.addEventListener("click", () => {
+      if (gameOver) reset();
+      flap();
+    });
 
     reset();
   }
