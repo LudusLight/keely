@@ -47,6 +47,7 @@
     initCheeseStack();
     initBreakout();
     initFlappyMouse();
+    init2048();
     initGallery();
     initQuiz();
     initObservatory();
@@ -5956,6 +5957,257 @@
       if (gameOver) reset();
       flap();
     });
+
+    reset();
+  }
+
+  // ========== 2048 CHEESE ==========
+  function init2048() {
+    const canvas = $("#g2048-canvas");
+    const scoreEl = $("#g2048-score");
+    const bestEl = $("#g2048-best");
+    const newBtn = $("#g2048-new");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+    const SIZE = 4;
+    const PAD = 8;
+    const CELL = (W - PAD * (SIZE + 1)) / SIZE;
+
+    // Cheese-themed colors for each tile value
+    const TILE_STYLES = {
+      2:    { bg: "#fff8dc", fg: "#8b7355", name: "Mild" },
+      4:    { bg: "#ffeebb", fg: "#8b6914", name: "Swiss" },
+      8:    { bg: "#ffc83d", fg: "#fff", name: "Gouda" },
+      16:   { bg: "#f5a623", fg: "#fff", name: "Cheddar" },
+      32:   { bg: "#e88c1a", fg: "#fff", name: "Colby" },
+      64:   { bg: "#d4700a", fg: "#fff", name: "Gruyère" },
+      128:  { bg: "#c0392b", fg: "#fff", name: "Aged" },
+      256:  { bg: "#8e44ad", fg: "#fff", name: "Bleu" },
+      512:  { bg: "#2980b9", fg: "#fff", name: "Stilton" },
+      1024: { bg: "#27ae60", fg: "#fff", name: "Parm" },
+      2048: { bg: "#f1c40f", fg: "#fff", name: "LEGEND" },
+    };
+
+    let grid, score, bestScore, gameOver, won;
+
+    bestScore = parseInt(localStorage.getItem("g2048Best") || "0");
+    if (bestEl) bestEl.textContent = bestScore;
+
+    function emptyGrid() {
+      return Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+    }
+
+    function emptyCells() {
+      const cells = [];
+      for (let r = 0; r < SIZE; r++)
+        for (let c = 0; c < SIZE; c++)
+          if (grid[r][c] === 0) cells.push([r, c]);
+      return cells;
+    }
+
+    function addRandom() {
+      const cells = emptyCells();
+      if (cells.length === 0) return;
+      const [r, c] = cells[Math.floor(Math.random() * cells.length)];
+      grid[r][c] = Math.random() < 0.9 ? 2 : 4;
+    }
+
+    function reset() {
+      grid = emptyGrid();
+      score = 0; gameOver = false; won = false;
+      addRandom(); addRandom();
+      if (scoreEl) scoreEl.textContent = 0;
+      draw();
+    }
+
+    function canMove() {
+      for (let r = 0; r < SIZE; r++)
+        for (let c = 0; c < SIZE; c++) {
+          if (grid[r][c] === 0) return true;
+          if (c < SIZE - 1 && grid[r][c] === grid[r][c + 1]) return true;
+          if (r < SIZE - 1 && grid[r][c] === grid[r + 1][c]) return true;
+        }
+      return false;
+    }
+
+    function slide(row) {
+      let arr = row.filter(v => v !== 0);
+      let merged = false;
+      for (let i = 0; i < arr.length - 1; i++) {
+        if (arr[i] === arr[i + 1]) {
+          arr[i] *= 2;
+          score += arr[i];
+          if (arr[i] === 2048) won = true;
+          arr[i + 1] = 0;
+          merged = true;
+        }
+      }
+      arr = arr.filter(v => v !== 0);
+      while (arr.length < SIZE) arr.push(0);
+      return { row: arr, merged };
+    }
+
+    function move(dir) {
+      let moved = false;
+      const oldGrid = grid.map(r => [...r]);
+
+      if (dir === "left") {
+        for (let r = 0; r < SIZE; r++) {
+          const res = slide(grid[r]);
+          grid[r] = res.row;
+        }
+      } else if (dir === "right") {
+        for (let r = 0; r < SIZE; r++) {
+          const res = slide([...grid[r]].reverse());
+          grid[r] = res.row.reverse();
+        }
+      } else if (dir === "up") {
+        for (let c = 0; c < SIZE; c++) {
+          const col = [];
+          for (let r = 0; r < SIZE; r++) col.push(grid[r][c]);
+          const res = slide(col);
+          for (let r = 0; r < SIZE; r++) grid[r][c] = res.row[r];
+        }
+      } else if (dir === "down") {
+        for (let c = 0; c < SIZE; c++) {
+          const col = [];
+          for (let r = 0; r < SIZE; r++) col.push(grid[r][c]);
+          const res = slide(col.reverse());
+          const newCol = res.row.reverse();
+          for (let r = 0; r < SIZE; r++) grid[r][c] = newCol[r];
+        }
+      }
+
+      // Check if anything moved
+      for (let r = 0; r < SIZE; r++)
+        for (let c = 0; c < SIZE; c++)
+          if (grid[r][c] !== oldGrid[r][c]) moved = true;
+
+      if (moved) {
+        addRandom();
+        if (score > bestScore) {
+          bestScore = score;
+          localStorage.setItem("g2048Best", bestScore);
+          if (bestEl) bestEl.textContent = bestScore;
+        }
+        if (scoreEl) scoreEl.textContent = score;
+        if (!canMove()) gameOver = true;
+        playSqueak();
+        draw();
+      }
+    }
+
+    function drawTile(r, c, val) {
+      const x = PAD + c * (CELL + PAD);
+      const y = PAD + r * (CELL + PAD);
+
+      if (val === 0) {
+        ctx.fillStyle = "rgba(255,255,255,0.08)";
+        ctx.beginPath(); ctx.roundRect(x, y, CELL, CELL, 6); ctx.fill();
+        return;
+      }
+
+      const style = TILE_STYLES[val] || { bg: "#3d2c1e", fg: "#ffc83d", name: "" + val };
+
+      // Tile background
+      ctx.fillStyle = style.bg;
+      ctx.beginPath(); ctx.roundRect(x, y, CELL, CELL, 6); ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.15)"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(x, y, CELL, CELL, 6); ctx.stroke();
+
+      // Cheese holes for lower values
+      if (val <= 64) {
+        ctx.fillStyle = "rgba(0,0,0,0.08)";
+        ctx.beginPath(); ctx.arc(x + CELL * 0.3, y + CELL * 0.35, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + CELL * 0.7, y + CELL * 0.55, 3, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // Number
+      ctx.fillStyle = style.fg;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      const fontSize = val >= 1024 ? 18 : val >= 128 ? 22 : 26;
+      ctx.font = `bold ${fontSize}px 'Nunito', sans-serif`;
+      ctx.fillText(val, x + CELL / 2, y + CELL / 2 - 4);
+
+      // Cheese name label
+      if (style.name) {
+        ctx.font = "bold 9px 'Nunito', sans-serif";
+        ctx.fillStyle = style.fg;
+        ctx.globalAlpha = 0.7;
+        ctx.fillText(style.name, x + CELL / 2, y + CELL / 2 + 16);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function draw() {
+      // Board background
+      ctx.fillStyle = "#3d2c1e";
+      ctx.beginPath(); ctx.roundRect(0, 0, W, H, 8); ctx.fill();
+
+      // Tiles
+      for (let r = 0; r < SIZE; r++)
+        for (let c = 0; c < SIZE; c++)
+          drawTile(r, c, grid[r][c]);
+
+      // Game over overlay
+      if (gameOver) {
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(0, 0, W, H);
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 28px 'Nunito', sans-serif";
+        ctx.fillText("Game Over!", W / 2, H / 2 - 15);
+        ctx.fillStyle = "#ffc83d";
+        ctx.font = "bold 16px 'Nunito', sans-serif";
+        ctx.fillText(`Score: ${score}`, W / 2, H / 2 + 15);
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.font = "13px 'Nunito', sans-serif";
+        ctx.fillText("Press New Game to retry", W / 2, H / 2 + 40);
+      }
+
+      // Win overlay
+      if (won) {
+        ctx.fillStyle = "rgba(255,200,61,0.3)";
+        ctx.fillRect(0, 0, W, H);
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 28px 'Nunito', sans-serif";
+        ctx.fillText("You Win! 🧀", W / 2, H / 2 - 15);
+        ctx.font = "13px 'Nunito', sans-serif";
+        ctx.fillText("Keep going or start a new game!", W / 2, H / 2 + 15);
+        won = false; // Show once, then let them keep playing
+      }
+    }
+
+    // Keyboard
+    document.addEventListener("keydown", (e) => {
+      if (!$("#game-2048") || !$("#game-2048").classList.contains("active")) return;
+      if (gameOver) return;
+      const dirs = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down",
+                     a: "left", d: "right", w: "up", s: "down" };
+      if (dirs[e.key]) { e.preventDefault(); move(dirs[e.key]); }
+    });
+
+    // Touch swipe
+    let touchStart = null;
+    canvas.addEventListener("touchstart", (e) => {
+      touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }, { passive: true });
+    canvas.addEventListener("touchend", (e) => {
+      if (!touchStart || gameOver) return;
+      const dx = e.changedTouches[0].clientX - touchStart.x;
+      const dy = e.changedTouches[0].clientY - touchStart.y;
+      touchStart = null;
+      if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        move(dx > 0 ? "right" : "left");
+      } else {
+        move(dy > 0 ? "down" : "up");
+      }
+    });
+
+    if (newBtn) newBtn.addEventListener("click", () => { reset(); playPop(); });
 
     reset();
   }

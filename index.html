@@ -224,6 +224,7 @@
             <button class="arcade-tab" data-game="stack">🧱 Cheese Stack</button>
             <button class="arcade-tab" data-game="breakout">🧱 Breakout</button>
             <button class="arcade-tab" data-game="flappy">🐭 Flappy Mouse</button>
+            <button class="arcade-tab" data-game="2048">🧀 2048</button>
           </div>
           <div class="arcade-content">
             <div class="game-panel active" id="game-maze">
@@ -343,6 +344,17 @@
               </div>
               <canvas id="flappy-canvas" width="280" height="400"></canvas>
               <button id="flappy-start" class="btn-game">Start Flapping! 🐭</button>
+            </div>
+            <div class="game-panel" id="game-2048">
+              <p class="game-desc">Slide cheese blocks to merge them! Reach the legendary 2048 cheese! 🧀</p>
+              <div class="g2048-header">
+                <span>🧀 Score: <strong id="g2048-score">0</strong></span>
+                <span>🏆 Best: <strong id="g2048-best">0</strong></span>
+              </div>
+              <canvas id="g2048-canvas" width="320" height="320"></canvas>
+              <div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.75rem;">
+                <button id="g2048-new" class="btn-game">New Game 🧀</button>
+              </div>
             </div>
           </div>
         </div>
