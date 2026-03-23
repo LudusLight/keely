@@ -1076,6 +1076,55 @@ footer { background: var(--warm-brown); color: var(--cream); position: relative;
 }
 .g2048-header { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--cheese-yellow); }
 
+/* Memory Match */
+.memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 320px; margin: 0 auto 1rem; }
+.memory-card {
+  aspect-ratio: 1; border-radius: 8px; cursor: pointer; font-size: 1.8rem;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--cheese-yellow); border: 2px solid #e8a317;
+  transition: transform 0.3s; user-select: none;
+}
+.memory-card.flipped, .memory-card.matched { background: #fff8dc; transform: rotateY(180deg); }
+.memory-card.matched { border-color: #2ecc71; opacity: 0.7; }
+.memory-header { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--cheese-yellow); }
+
+/* Simon Says */
+.simon-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 220px; margin: 0 auto 1rem; }
+.simon-btn {
+  aspect-ratio: 1; border-radius: 12px; border: 3px solid rgba(0,0,0,0.2);
+  font-size: 2rem; cursor: pointer; transition: filter 0.15s, transform 0.1s;
+  display: flex; align-items: center; justify-content: center;
+}
+.simon-btn.lit { filter: brightness(1.6); transform: scale(1.08); }
+.simon-btn:active { transform: scale(0.95); }
+.simon-header { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--cheese-yellow); }
+
+/* Tic Tac Toe */
+#ttt-canvas { display: block; margin: 0 auto; max-width: 100%; border-radius: 8px; cursor: pointer; }
+.ttt-header { text-align: center; margin-bottom: 0.75rem; font-size: 1.1rem; color: var(--cheese-yellow); }
+
+/* Reaction Time */
+.reaction-area {
+  width: 300px; height: 200px; border-radius: 12px; margin: 0 auto 1rem;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  background: #e74c3c; font-size: 1.2rem; font-weight: 700; color: #fff;
+  transition: background 0.2s; user-select: none;
+}
+.reaction-area.waiting { background: #e74c3c; }
+.reaction-area.ready { background: #2ecc71; }
+.reaction-area.result { background: #3498db; }
+.reaction-header { display: flex; justify-content: center; gap: 2rem; margin-bottom: 0.5rem; font-size: 1.1rem; color: var(--cheese-yellow); }
+
+/* Typing Speed */
+.typing-word { font-size: 2rem; font-weight: 700; text-align: center; margin: 1rem 0; color: var(--cheese-yellow); min-height: 2.5rem; }
+.typing-input {
+  display: block; margin: 0 auto 1rem; padding: 0.7rem 1rem; font-size: 1.1rem;
+  border: 2px solid var(--cheese-yellow); border-radius: 10px; text-align: center;
+  font-family: inherit; width: 250px; max-width: 100%;
+}
+.typing-input:focus { outline: none; box-shadow: 0 0 0 3px rgba(255,200,61,0.3); }
+.typing-header { display: flex; justify-content: center; gap: 2rem; margin-bottom: 0.5rem; font-size: 1.1rem; color: var(--cheese-yellow); }
+
 /* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
   nav { padding: 0.75rem 1rem; }

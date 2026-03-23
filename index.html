@@ -225,6 +225,11 @@
             <button class="arcade-tab" data-game="breakout">🧱 Breakout</button>
             <button class="arcade-tab" data-game="flappy">🐭 Flappy Mouse</button>
             <button class="arcade-tab" data-game="2048">🧀 2048</button>
+            <button class="arcade-tab" data-game="memory">🃏 Memory</button>
+            <button class="arcade-tab" data-game="simon">🔴 Simon</button>
+            <button class="arcade-tab" data-game="ttt">❌ Tic Tac Toe</button>
+            <button class="arcade-tab" data-game="reaction">⚡ Reaction</button>
+            <button class="arcade-tab" data-game="typing">⌨️ Typing</button>
           </div>
           <div class="arcade-content">
             <div class="game-panel active" id="game-maze">
@@ -355,6 +360,54 @@
               <div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.75rem;">
                 <button id="g2048-new" class="btn-game">New Game 🧀</button>
               </div>
+            </div>
+            <div class="game-panel" id="game-memory">
+              <p class="game-desc">Flip cards to find matching cheese pairs! 🧀🃏</p>
+              <div class="memory-header">
+                <span>🔄 Moves: <strong id="memory-moves">0</strong></span>
+                <span>🧀 Pairs: <strong id="memory-pairs">0</strong>/8</span>
+              </div>
+              <div class="memory-grid" id="memory-grid"></div>
+              <button id="memory-new" class="btn-game">New Game 🃏</button>
+            </div>
+            <div class="game-panel" id="game-simon">
+              <p class="game-desc">Watch the pattern, then repeat it! How long can you go? 🧠</p>
+              <div class="simon-header">
+                <span>🧀 Round: <strong id="simon-round">0</strong></span>
+                <span>🏆 Best: <strong id="simon-best">0</strong></span>
+              </div>
+              <div class="simon-grid" id="simon-grid">
+                <button class="simon-btn" data-idx="0" style="background:#e74c3c;">🧀</button>
+                <button class="simon-btn" data-idx="1" style="background:#3498db;">🐭</button>
+                <button class="simon-btn" data-idx="2" style="background:#2ecc71;">🧈</button>
+                <button class="simon-btn" data-idx="3" style="background:#f39c12;">🥛</button>
+              </div>
+              <button id="simon-start" class="btn-game">Start! 🧠</button>
+            </div>
+            <div class="game-panel" id="game-ttt">
+              <p class="game-desc">Mouse vs Cat! Pick your side and play Tic Tac Toe! 🐭😺</p>
+              <div class="ttt-header"><strong id="ttt-status">Click a cell to start!</strong></div>
+              <canvas id="ttt-canvas" width="300" height="300"></canvas>
+              <button id="ttt-new" class="btn-game">New Game 🐭</button>
+            </div>
+            <div class="game-panel" id="game-reaction">
+              <p class="game-desc">Click the cheese as fast as you can when it appears! ⚡🧀</p>
+              <div class="reaction-area" id="reaction-area">
+                <div id="reaction-msg">Click to start!</div>
+              </div>
+              <div class="reaction-header">
+                <span>⚡ Best: <strong id="reaction-best">—</strong></span>
+              </div>
+            </div>
+            <div class="game-panel" id="game-typing">
+              <p class="game-desc">Type the cheese words as fast as you can! ⌨️🧀</p>
+              <div class="typing-header">
+                <span>🧀 Score: <strong id="typing-score">0</strong></span>
+                <span>⏱️ Time: <strong id="typing-time">30</strong>s</span>
+              </div>
+              <div class="typing-word" id="typing-word">—</div>
+              <input type="text" id="typing-input" class="typing-input" placeholder="Type here..." autocomplete="off">
+              <button id="typing-start" class="btn-game">Start Typing! ⌨️</button>
             </div>
           </div>
         </div>

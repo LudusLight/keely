@@ -48,6 +48,11 @@
     initBreakout();
     initFlappyMouse();
     init2048();
+    initMemory();
+    initSimon();
+    initTicTacToe();
+    initReaction();
+    initTyping();
     initGallery();
     initQuiz();
     initObservatory();
@@ -6209,6 +6214,385 @@
 
     if (newBtn) newBtn.addEventListener("click", () => { reset(); playPop(); });
 
+    reset();
+  }
+
+  // ========== MEMORY MATCH ==========
+  function initMemory() {
+    const grid = $("#memory-grid");
+    const movesEl = $("#memory-moves");
+    const pairsEl = $("#memory-pairs");
+    const newBtn = $("#memory-new");
+    if (!grid) return;
+
+    const EMOJIS = ["🧀", "🐭", "🧈", "🥛", "🍕", "🧁", "🐱", "🧀"];
+    let cards, flipped, matched, moves, locked;
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function reset() {
+      const pairs = shuffle([...EMOJIS, ...EMOJIS]);
+      cards = pairs.map((emoji, i) => ({ emoji, id: i, flipped: false, matched: false }));
+      flipped = []; matched = 0; moves = 0; locked = false;
+      if (movesEl) movesEl.textContent = 0;
+      if (pairsEl) pairsEl.textContent = "0";
+      render();
+    }
+
+    function render() {
+      grid.innerHTML = "";
+      cards.forEach((card, i) => {
+        const el = document.createElement("div");
+        el.className = "memory-card" + (card.flipped || card.matched ? " flipped" : "") + (card.matched ? " matched" : "");
+        el.textContent = (card.flipped || card.matched) ? card.emoji : "?";
+        el.addEventListener("click", () => flipCard(i));
+        grid.appendChild(el);
+      });
+    }
+
+    function flipCard(i) {
+      if (locked || cards[i].flipped || cards[i].matched) return;
+      cards[i].flipped = true;
+      flipped.push(i);
+      render();
+
+      if (flipped.length === 2) {
+        moves++;
+        if (movesEl) movesEl.textContent = moves;
+        locked = true;
+        const [a, b] = flipped;
+        if (cards[a].emoji === cards[b].emoji) {
+          cards[a].matched = true;
+          cards[b].matched = true;
+          matched++;
+          if (pairsEl) pairsEl.textContent = matched;
+          flipped = []; locked = false;
+          render();
+          if (matched === 8) playCelebration();
+          else playPop();
+        } else {
+          setTimeout(() => {
+            cards[a].flipped = false;
+            cards[b].flipped = false;
+            flipped = []; locked = false;
+            render();
+          }, 800);
+        }
+      }
+    }
+
+    if (newBtn) newBtn.addEventListener("click", reset);
+    reset();
+  }
+
+  // ========== SIMON SAYS ==========
+  function initSimon() {
+    const gridEl = $("#simon-grid");
+    const roundEl = $("#simon-round");
+    const bestEl = $("#simon-best");
+    const startBtn = $("#simon-start");
+    if (!gridEl) return;
+
+    const btns = gridEl.querySelectorAll(".simon-btn");
+    let sequence, playerIdx, round, bestScore, playing, showing;
+
+    bestScore = parseInt(localStorage.getItem("simonBest") || "0");
+    if (bestEl) bestEl.textContent = bestScore;
+
+    function reset() {
+      sequence = []; playerIdx = 0; round = 0; playing = false; showing = false;
+      if (roundEl) roundEl.textContent = 0;
+    }
+
+    function flash(idx, duration) {
+      return new Promise(resolve => {
+        btns[idx].classList.add("lit");
+        playPop();
+        setTimeout(() => { btns[idx].classList.remove("lit"); setTimeout(resolve, 150); }, duration);
+      });
+    }
+
+    async function showSequence() {
+      showing = true;
+      for (let i = 0; i < sequence.length; i++) {
+        await flash(sequence[i], 400);
+      }
+      showing = false;
+      playing = true;
+      playerIdx = 0;
+    }
+
+    function nextRound() {
+      round++;
+      if (roundEl) roundEl.textContent = round;
+      sequence.push(Math.floor(Math.random() * 4));
+      playing = false;
+      setTimeout(() => showSequence(), 500);
+    }
+
+    function handlePress(idx) {
+      if (!playing || showing) return;
+      flash(idx, 200);
+      if (sequence[playerIdx] === idx) {
+        playerIdx++;
+        if (playerIdx === sequence.length) {
+          playing = false;
+          if (round > bestScore) {
+            bestScore = round;
+            localStorage.setItem("simonBest", bestScore);
+            if (bestEl) bestEl.textContent = bestScore;
+          }
+          playCelebration();
+          setTimeout(nextRound, 800);
+        }
+      } else {
+        // Wrong!
+        playing = false;
+        playPop();
+        btns.forEach(b => b.style.filter = "grayscale(1)");
+        setTimeout(() => {
+          btns.forEach(b => b.style.filter = "");
+          reset();
+        }, 1200);
+      }
+    }
+
+    btns.forEach((btn, i) => btn.addEventListener("click", () => handlePress(i)));
+    if (startBtn) startBtn.addEventListener("click", () => { reset(); nextRound(); });
+    reset();
+  }
+
+  // ========== TIC TAC TOE ==========
+  function initTicTacToe() {
+    const canvas = $("#ttt-canvas");
+    const statusEl = $("#ttt-status");
+    const newBtn = $("#ttt-new");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+    const CELL = W / 3;
+
+    let board, turn, gameOver;
+
+    function reset() {
+      board = Array(9).fill(null);
+      turn = "mouse"; gameOver = false;
+      if (statusEl) statusEl.textContent = "Your turn! (You're 🐭)";
+      draw();
+    }
+
+    function checkWin(b) {
+      const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+      for (const [a, x, c] of lines) {
+        if (b[a] && b[a] === b[x] && b[a] === b[c]) return { winner: b[a], line: [a, x, c] };
+      }
+      return null;
+    }
+
+    function draw() {
+      ctx.fillStyle = "#fff8dc";
+      ctx.fillRect(0, 0, W, H);
+
+      // Grid lines
+      ctx.strokeStyle = "#3d2c1e"; ctx.lineWidth = 4;
+      for (let i = 1; i < 3; i++) {
+        ctx.beginPath(); ctx.moveTo(i * CELL, 10); ctx.lineTo(i * CELL, H - 10); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(10, i * CELL); ctx.lineTo(W - 10, i * CELL); ctx.stroke();
+      }
+
+      // Pieces
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.font = "bold 48px 'Nunito', sans-serif";
+      board.forEach((cell, i) => {
+        if (!cell) return;
+        const x = (i % 3) * CELL + CELL / 2;
+        const y = Math.floor(i / 3) * CELL + CELL / 2;
+        ctx.fillStyle = cell === "mouse" ? "#3d2c1e" : "#e74c3c";
+        ctx.fillText(cell === "mouse" ? "🐭" : "😺", x, y);
+      });
+
+      // Win line
+      const result = checkWin(board);
+      if (result) {
+        ctx.strokeStyle = "#ffc83d"; ctx.lineWidth = 6; ctx.lineCap = "round";
+        const [a, , c] = result.line;
+        const ax = (a % 3) * CELL + CELL / 2, ay = Math.floor(a / 3) * CELL + CELL / 2;
+        const cx = (c % 3) * CELL + CELL / 2, cy = Math.floor(c / 3) * CELL + CELL / 2;
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(cx, cy); ctx.stroke();
+      }
+    }
+
+    function aiMove() {
+      if (gameOver) return;
+      // Simple AI: try to win, then block, then center, then random
+      const empty = board.map((v, i) => v === null ? i : -1).filter(i => i >= 0);
+      if (empty.length === 0) return;
+
+      // Try to win
+      for (const i of empty) {
+        board[i] = "cat";
+        if (checkWin(board)) { turn = "mouse"; gameOver = true; if (statusEl) statusEl.textContent = "Cat wins! 😺"; draw(); playPop(); return; }
+        board[i] = null;
+      }
+      // Block player
+      for (const i of empty) {
+        board[i] = "mouse";
+        if (checkWin(board)) { board[i] = "cat"; turn = "mouse"; draw(); if (board.every(c => c)) { gameOver = true; if (statusEl) statusEl.textContent = "Draw!"; } else { if (statusEl) statusEl.textContent = "Your turn!"; } return; }
+        board[i] = null;
+      }
+      // Center
+      if (board[4] === null) { board[4] = "cat"; turn = "mouse"; draw(); if (statusEl) statusEl.textContent = "Your turn!"; return; }
+      // Random
+      const pick = empty[Math.floor(Math.random() * empty.length)];
+      board[pick] = "cat";
+      turn = "mouse";
+      if (board.every(c => c) && !checkWin(board)) { gameOver = true; if (statusEl) statusEl.textContent = "Draw!"; }
+      else if (statusEl) statusEl.textContent = "Your turn!";
+      draw();
+    }
+
+    canvas.addEventListener("click", (e) => {
+      if (gameOver || turn !== "mouse") return;
+      const rect = canvas.getBoundingClientRect();
+      const sx = W / rect.width;
+      const x = (e.clientX - rect.left) * sx;
+      const y = (e.clientY - rect.top) * sx;
+      const col = Math.floor(x / CELL);
+      const row = Math.floor(y / CELL);
+      const idx = row * 3 + col;
+      if (board[idx]) return;
+      board[idx] = "mouse";
+      playSqueak();
+      const result = checkWin(board);
+      if (result) { gameOver = true; if (statusEl) statusEl.textContent = "You win! 🐭🎉"; draw(); playCelebration(); return; }
+      if (board.every(c => c)) { gameOver = true; if (statusEl) statusEl.textContent = "Draw!"; draw(); return; }
+      turn = "cat";
+      if (statusEl) statusEl.textContent = "Cat is thinking...";
+      draw();
+      setTimeout(aiMove, 500);
+    });
+
+    if (newBtn) newBtn.addEventListener("click", reset);
+    reset();
+  }
+
+  // ========== REACTION TIME ==========
+  function initReaction() {
+    const area = $("#reaction-area");
+    const msgEl = $("#reaction-msg");
+    const bestEl = $("#reaction-best");
+    if (!area) return;
+
+    let state = "idle", timeout, startTime;
+    let bestTime = parseInt(localStorage.getItem("reactionBest") || "0");
+    if (bestEl && bestTime) bestEl.textContent = bestTime + "ms";
+
+    area.addEventListener("click", () => {
+      if (state === "idle") {
+        state = "waiting";
+        area.className = "reaction-area waiting";
+        msgEl.textContent = "Wait for green...";
+        const delay = 1500 + Math.random() * 3000;
+        timeout = setTimeout(() => {
+          state = "ready";
+          area.className = "reaction-area ready";
+          msgEl.textContent = "CLICK NOW! 🧀";
+          startTime = Date.now();
+        }, delay);
+      } else if (state === "waiting") {
+        clearTimeout(timeout);
+        state = "idle";
+        area.className = "reaction-area";
+        msgEl.textContent = "Too early! Click to try again.";
+        playPop();
+      } else if (state === "ready") {
+        const time = Date.now() - startTime;
+        state = "idle";
+        area.className = "reaction-area result";
+        msgEl.textContent = `${time}ms! Click to try again.`;
+        if (!bestTime || time < bestTime) {
+          bestTime = time;
+          localStorage.setItem("reactionBest", bestTime);
+          if (bestEl) bestEl.textContent = bestTime + "ms";
+          msgEl.textContent = `${time}ms! New best! 🎉`;
+        }
+        playCelebration();
+      }
+    });
+  }
+
+  // ========== TYPING SPEED ==========
+  function initTyping() {
+    const wordEl = $("#typing-word");
+    const inputEl = $("#typing-input");
+    const scoreEl = $("#typing-score");
+    const timeEl = $("#typing-time");
+    const startBtn = $("#typing-start");
+    if (!wordEl || !inputEl) return;
+
+    const WORDS = [
+      "cheddar","brie","gouda","mozzarella","swiss","parmesan","camembert",
+      "gruyere","stilton","colby","havarti","muenster","provolone","ricotta",
+      "mascarpone","feta","roquefort","manchego","emmental","fontina",
+      "cheese","mouse","whiskers","squeak","nibble","wheel","wedge","slice",
+      "crackers","fondue","raclette","nachos","pizza","macaroni","gratin"
+    ];
+
+    let score, timer, running, currentWord;
+
+    function pickWord() {
+      currentWord = WORDS[Math.floor(Math.random() * WORDS.length)];
+      wordEl.textContent = currentWord;
+    }
+
+    function reset() {
+      score = 0; running = false;
+      if (scoreEl) scoreEl.textContent = 0;
+      if (timeEl) timeEl.textContent = 30;
+      wordEl.textContent = "—";
+      inputEl.value = "";
+      inputEl.disabled = true;
+      if (timer) clearInterval(timer);
+    }
+
+    function start() {
+      reset();
+      running = true;
+      inputEl.disabled = false;
+      inputEl.focus();
+      pickWord();
+      let timeLeft = 30;
+      timer = setInterval(() => {
+        timeLeft--;
+        if (timeEl) timeEl.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          running = false;
+          inputEl.disabled = true;
+          wordEl.textContent = `Done! Score: ${score} 🎉`;
+          playCelebration();
+        }
+      }, 1000);
+    }
+
+    inputEl.addEventListener("input", () => {
+      if (!running) return;
+      if (inputEl.value.trim().toLowerCase() === currentWord) {
+        score++;
+        if (scoreEl) scoreEl.textContent = score;
+        inputEl.value = "";
+        pickWord();
+        playPop();
+      }
+    });
+
+    if (startBtn) startBtn.addEventListener("click", start);
     reset();
   }
 
