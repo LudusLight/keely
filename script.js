@@ -45,6 +45,7 @@
     initDoodleJump();
     initPicross();
     initCheeseStack();
+    initBreakout();
     initGallery();
     initQuiz();
     initObservatory();
@@ -5070,6 +5071,7 @@
 
     let blocks, cur, score, bestScore, gameOver, started, running;
     let perfectCount, particles, perfTexts, camY, camTarget;
+    let mouseJumpVY = 0, mouseJumpOffset = 0;
 
     bestScore = parseInt(localStorage.getItem("stackBest") || "0");
     if (bestEl) bestEl.textContent = bestScore;
@@ -5121,6 +5123,7 @@
         spawnParticles(last.x, newY, last.w, "#fff", 8);
         playCelebration();
         score += 2;
+        mouseJumpVY = -5; // big jump for perfect
       } else {
         // Partial — slice off overhang
         const cutX = cur.x < last.x ? cur.x : overEnd;
@@ -5130,6 +5133,7 @@
         perfectCount = 0;
         playSqueak();
         score++;
+        mouseJumpVY = -3.5; // small jump for partial
       }
 
       if (scoreEl) scoreEl.textContent = score;
@@ -5163,8 +5167,7 @@
     }
 
     function drawMiniMouse(mx, my) {
-      const bob = Math.sin(Date.now() / 300) * 2;
-      my += bob;
+      my += mouseJumpOffset;
       // Body
       ctx.fillStyle = "#9e9e9e";
       ctx.beginPath(); ctx.ellipse(mx, my - 4, 8, 10, 0, 0, Math.PI * 2); ctx.fill();
@@ -5293,6 +5296,11 @@
       // Camera lerp
       camY += (camTarget - camY) * 0.06;
 
+      // Mouse jump physics
+      mouseJumpOffset += mouseJumpVY;
+      mouseJumpVY += 0.35; // gravity
+      if (mouseJumpOffset >= 0) { mouseJumpOffset = 0; mouseJumpVY = 0; }
+
       // Update particles
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
@@ -5326,6 +5334,328 @@
       if (gameOver) reset();
       if (!started) { started = true; running = true; update(); }
     });
+
+    reset();
+  }
+
+  // ========== CHEESE BREAKOUT ==========
+  function initBreakout() {
+    const canvas = $("#breakout-canvas");
+    const scoreEl = $("#breakout-score");
+    const livesEl = $("#breakout-lives");
+    const startBtn = $("#breakout-start");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+
+    // Brick config
+    const COLS = 8, ROWS = 6, BRICK_PAD = 4;
+    const BRICK_W = (W - BRICK_PAD * (COLS + 1)) / COLS;
+    const BRICK_H = 16;
+    const BRICK_TOP = 50;
+
+    // Paddle
+    const PAD_W = 60, PAD_H = 12, PAD_Y = H - 30;
+
+    // Ball
+    const BALL_R = 5;
+    const BALL_SPEED = 2.5;
+
+    // Brick colors (cheese theme rows)
+    const BRICK_COLORS = ["#ffc83d", "#f5b820", "#e8a317", "#d4950a", "#c48800", "#b07a00"];
+    const BRICK_POINTS = [10, 10, 20, 20, 30, 30];
+
+    let bricks, padX, ball, score, lives, gameOver, started, running, animId;
+    let particles = [];
+
+    function reset() {
+      bricks = [];
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          bricks.push({
+            x: BRICK_PAD + c * (BRICK_W + BRICK_PAD),
+            y: BRICK_TOP + r * (BRICK_H + BRICK_PAD),
+            w: BRICK_W, h: BRICK_H,
+            color: BRICK_COLORS[r],
+            points: BRICK_POINTS[r],
+            alive: true,
+            hasHole: Math.random() < 0.3 // cheese holes on some bricks
+          });
+        }
+      }
+      padX = (W - PAD_W) / 2;
+      ball = { x: W / 2, y: PAD_Y - BALL_R - 2, vx: BALL_SPEED * 0.7, vy: -BALL_SPEED };
+      score = 0; lives = 3; gameOver = false; started = false; running = false;
+      particles = [];
+      if (scoreEl) scoreEl.textContent = 0;
+      if (livesEl) livesEl.textContent = 3;
+      if (animId) cancelAnimationFrame(animId);
+      draw();
+    }
+
+    function spawnParticles(x, y, color, n) {
+      for (let i = 0; i < n; i++) {
+        particles.push({
+          x, y,
+          vx: (Math.random() - 0.5) * 5,
+          vy: (Math.random() - 0.5) * 5,
+          life: 1, color, r: 2 + Math.random() * 2
+        });
+      }
+    }
+
+    function resetBall() {
+      ball.x = padX + PAD_W / 2;
+      ball.y = PAD_Y - BALL_R - 2;
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.6;
+      ball.vx = Math.cos(angle) * BALL_SPEED;
+      ball.vy = Math.sin(angle) * BALL_SPEED;
+      started = false;
+    }
+
+    function drawCheeseBrick(b) {
+      ctx.fillStyle = b.color;
+      ctx.beginPath(); ctx.roundRect(b.x, b.y, b.w, b.h, 3); ctx.fill();
+      ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(b.x, b.y, b.w, b.h, 3); ctx.stroke();
+      if (b.hasHole) {
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.beginPath(); ctx.arc(b.x + b.w * 0.3, b.y + b.h / 2, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(b.x + b.w * 0.7, b.y + b.h / 2, 2, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+
+    function drawPaddle() {
+      // Mouse body (paddle)
+      ctx.fillStyle = "#9e9e9e";
+      ctx.beginPath(); ctx.roundRect(padX, PAD_Y, PAD_W, PAD_H, 6); ctx.fill();
+      ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(padX, PAD_Y, PAD_W, PAD_H, 6); ctx.stroke();
+      // Belly
+      ctx.fillStyle = "#c8c8c8";
+      ctx.beginPath(); ctx.roundRect(padX + 8, PAD_Y + 2, PAD_W - 16, PAD_H - 4, 4); ctx.fill();
+      // Ears
+      ctx.fillStyle = "#9e9e9e";
+      ctx.beginPath(); ctx.arc(padX + 8, PAD_Y - 2, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(padX + PAD_W - 8, PAD_Y - 2, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#f0c0c0";
+      ctx.beginPath(); ctx.arc(padX + 8, PAD_Y - 2, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(padX + PAD_W - 8, PAD_Y - 2, 3, 0, Math.PI * 2); ctx.fill();
+      // Outlines on ears
+      ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(padX + 8, PAD_Y - 2, 5, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(padX + PAD_W - 8, PAD_Y - 2, 5, 0, Math.PI * 2); ctx.stroke();
+      // Eyes
+      ctx.fillStyle = "#111";
+      ctx.beginPath(); ctx.arc(padX + PAD_W / 2 - 6, PAD_Y + 3, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(padX + PAD_W / 2 + 6, PAD_Y + 3, 2, 0, Math.PI * 2); ctx.fill();
+      // Nose
+      ctx.fillStyle = "#ff8faa";
+      ctx.beginPath(); ctx.arc(padX + PAD_W / 2, PAD_Y + 5, 1.5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function drawBall() {
+      // Cheese ball
+      ctx.fillStyle = "#ffc83d";
+      ctx.beginPath(); ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI * 2); ctx.stroke();
+      // Hole
+      ctx.fillStyle = "#e8a317";
+      ctx.beginPath(); ctx.arc(ball.x - 1, ball.y - 1, 1.5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function draw() {
+      // Background
+      ctx.fillStyle = "#1a1a2e";
+      ctx.fillRect(0, 0, W, H);
+
+      // Stars
+      ctx.fillStyle = "rgba(255,255,255,0.3)";
+      for (let i = 0; i < 30; i++) {
+        const sx = (i * 97 + 13) % W;
+        const sy = (i * 67 + 29) % (BRICK_TOP - 10);
+        ctx.fillRect(sx, sy, 1.5, 1.5);
+      }
+
+      // Bricks
+      bricks.forEach(b => { if (b.alive) drawCheeseBrick(b); });
+
+      // Paddle
+      drawPaddle();
+
+      // Ball
+      drawBall();
+
+      // Particles
+      particles.forEach(p => {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+
+      // Pre-start
+      if (!started && !gameOver) {
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.font = "bold 14px 'Nunito', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Click or Space to launch!", W / 2, H / 2);
+      }
+
+      // Game over
+      if (gameOver) {
+        ctx.fillStyle = "rgba(0,0,0,0.6)";
+        ctx.fillRect(0, 0, W, H);
+        ctx.textAlign = "center";
+        const won = bricks.every(b => !b.alive);
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 26px 'Nunito', sans-serif";
+        ctx.fillText(won ? "You Win!" : "Game Over!", W / 2, H / 2 - 20);
+        ctx.fillStyle = "#ffc83d";
+        ctx.font = "bold 18px 'Nunito', sans-serif";
+        ctx.fillText(`Score: ${score}`, W / 2, H / 2 + 10);
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.font = "14px 'Nunito', sans-serif";
+        ctx.fillText("Click or Space to play again", W / 2, H / 2 + 40);
+      }
+    }
+
+    function update() {
+      if (gameOver) { draw(); return; }
+
+      if (started) {
+        // Move ball
+        ball.x += ball.vx;
+        ball.y += ball.vy;
+
+        // Wall collisions
+        if (ball.x - BALL_R <= 0) { ball.x = BALL_R; ball.vx = Math.abs(ball.vx); }
+        if (ball.x + BALL_R >= W) { ball.x = W - BALL_R; ball.vx = -Math.abs(ball.vx); }
+        if (ball.y - BALL_R <= 0) { ball.y = BALL_R; ball.vy = Math.abs(ball.vy); }
+
+        // Bottom — lose life
+        if (ball.y + BALL_R >= H) {
+          lives--;
+          if (livesEl) livesEl.textContent = lives;
+          if (lives <= 0) {
+            gameOver = true;
+            playPop();
+          } else {
+            resetBall();
+          }
+        }
+
+        // Paddle collision
+        if (ball.vy > 0 && ball.y + BALL_R >= PAD_Y && ball.y + BALL_R <= PAD_Y + PAD_H + 4 &&
+            ball.x >= padX - 2 && ball.x <= padX + PAD_W + 2) {
+          ball.y = PAD_Y - BALL_R;
+          // Angle based on where ball hit paddle
+          const hitPos = (ball.x - padX) / PAD_W; // 0 to 1
+          const angle = -Math.PI * 0.8 + hitPos * Math.PI * 0.6; // -144 to -36 degrees
+          const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+          ball.vx = Math.cos(angle) * speed;
+          ball.vy = Math.sin(angle) * speed;
+          // Ensure going up
+          if (ball.vy > 0) ball.vy = -ball.vy;
+          playSqueak();
+        }
+
+        // Brick collisions
+        for (let i = 0; i < bricks.length; i++) {
+          const b = bricks[i];
+          if (!b.alive) continue;
+          if (ball.x + BALL_R > b.x && ball.x - BALL_R < b.x + b.w &&
+              ball.y + BALL_R > b.y && ball.y - BALL_R < b.y + b.h) {
+            b.alive = false;
+            score += b.points;
+            if (scoreEl) scoreEl.textContent = score;
+            spawnParticles(b.x + b.w / 2, b.y + b.h / 2, b.color, 5);
+            playPop();
+
+            // Determine bounce direction
+            const overlapLeft = (ball.x + BALL_R) - b.x;
+            const overlapRight = (b.x + b.w) - (ball.x - BALL_R);
+            const overlapTop = (ball.y + BALL_R) - b.y;
+            const overlapBottom = (b.y + b.h) - (ball.y - BALL_R);
+            const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+            if (minOverlap === overlapLeft || minOverlap === overlapRight) ball.vx = -ball.vx;
+            else ball.vy = -ball.vy;
+
+            // Check win
+            if (bricks.every(b2 => !b2.alive)) {
+              gameOver = true;
+              playCelebration();
+            }
+            break;
+          }
+        }
+      } else {
+        // Ball follows paddle before launch
+        ball.x = padX + PAD_W / 2;
+        ball.y = PAD_Y - BALL_R - 2;
+      }
+
+      // Update particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.life -= 0.03;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      draw();
+      animId = requestAnimationFrame(update);
+    }
+
+    function launch() {
+      if (gameOver) { reset(); return; }
+      if (!running) { running = true; update(); }
+      if (!started) {
+        started = true;
+        const angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.5;
+        ball.vx = Math.cos(angle) * BALL_SPEED;
+        ball.vy = Math.sin(angle) * BALL_SPEED;
+      }
+    }
+
+    // Mouse/touch controls
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      padX = (e.clientX - rect.left) * scaleX - PAD_W / 2;
+      padX = Math.max(0, Math.min(W - PAD_W, padX));
+    });
+
+    canvas.addEventListener("touchmove", (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      padX = (e.touches[0].clientX - rect.left) * scaleX - PAD_W / 2;
+      padX = Math.max(0, Math.min(W - PAD_W, padX));
+    }, { passive: false });
+
+    canvas.addEventListener("click", launch);
+    canvas.addEventListener("touchstart", (e) => { e.preventDefault(); launch(); }, { passive: false });
+
+    // Keyboard
+    const keysDown = {};
+    document.addEventListener("keydown", (e) => {
+      if (!$("#game-breakout") || !$("#game-breakout").classList.contains("active")) return;
+      keysDown[e.key] = true;
+      if (e.key === " ") { e.preventDefault(); launch(); }
+    });
+    document.addEventListener("keyup", (e) => { keysDown[e.key] = false; });
+
+    // Keyboard paddle movement in update
+    const origUpdate = update;
+    const keyPadSpeed = 6;
+    setInterval(() => {
+      if (!running || gameOver) return;
+      if (keysDown["ArrowLeft"] || keysDown["a"]) padX = Math.max(0, padX - keyPadSpeed);
+      if (keysDown["ArrowRight"] || keysDown["d"]) padX = Math.min(W - PAD_W, padX + keyPadSpeed);
+    }, 16);
+
+    if (startBtn) startBtn.addEventListener("click", launch);
 
     reset();
   }

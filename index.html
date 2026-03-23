@@ -222,6 +222,7 @@
             <button class="arcade-tab" data-game="doodle">🐭 Mouse Jump</button>
             <button class="arcade-tab" data-game="picross">🧩 Picross</button>
             <button class="arcade-tab" data-game="stack">🧱 Cheese Stack</button>
+            <button class="arcade-tab" data-game="breakout">🧱 Breakout</button>
           </div>
           <div class="arcade-content">
             <div class="game-panel active" id="game-maze">
@@ -323,6 +324,15 @@
               </div>
               <canvas id="stack-canvas" width="300" height="400"></canvas>
               <button id="stack-start" class="btn-game">Start Stacking! 🧱</button>
+            </div>
+            <div class="game-panel" id="game-breakout">
+              <p class="game-desc">Smash all the cheese bricks! Move the paddle with mouse, arrow keys, or touch. 🧀💥</p>
+              <div class="breakout-header">
+                <span>🧀 Score: <strong id="breakout-score">0</strong></span>
+                <span>❤️ Lives: <strong id="breakout-lives">3</strong></span>
+              </div>
+              <canvas id="breakout-canvas" width="320" height="400"></canvas>
+              <button id="breakout-start" class="btn-game">Start Game! 💥</button>
             </div>
           </div>
         </div>

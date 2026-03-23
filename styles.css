@@ -1054,6 +1054,14 @@ footer { background: var(--warm-brown); color: var(--cream); position: relative;
 }
 .stack-header { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--cheese-yellow); }
 
+/* Cheese Breakout */
+#breakout-canvas {
+  border: 3px solid var(--cheese-yellow); border-radius: 8px;
+  display: block; margin: 0 auto; max-width: 100%;
+  background: #1a1a2e;
+}
+.breakout-header { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; font-size: 1.1rem; color: var(--cheese-yellow); }
+
 /* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
   nav { padding: 0.75rem 1rem; }
@@ -1078,7 +1086,7 @@ footer { background: var(--warm-brown); color: var(--cream); position: relative;
   .arcade-tab { padding: 0.5rem 0.6rem; font-size: 0.7rem; min-width: 60px; }
   canvas { max-width: 100%; height: auto; }
   #maze-canvas, #snake-canvas, #match3-canvas { max-width: 280px; }
-  #peggle-canvas, #doodle-canvas, #stack-canvas { max-width: 300px; }
+  #peggle-canvas, #doodle-canvas, #stack-canvas, #breakout-canvas { max-width: 300px; }
   .picrew-tab { padding: 0.4rem 0.5rem; min-width: 44px; }
   .picrew-tab-icon { font-size: 1.1rem; }
   .picrew-items-panel { grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); max-height: 140px; }
